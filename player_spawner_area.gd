@@ -52,6 +52,9 @@ func _process(_delta):
 	pass # Replace with function body.
 
 # ----- public methods
+func remote_spawn():
+	await(get_tree().create_timer(0.1).timeout)
+
 func local_spawn():
 	var player = players_scene.instantiate()
 	player.name = "MapodAvatar"

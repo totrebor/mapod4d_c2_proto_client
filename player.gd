@@ -14,8 +14,12 @@ extends Node3D
 
 
 # ----- signals
+signal player_event_requested(event)
 
 # ----- enums
+enum PLAYER_EVENT_TYPES {
+	FW_TRUST = 0,
+}
 
 # ----- constants
 
@@ -24,6 +28,11 @@ extends Node3D
 # ----- public variables
 
 # ----- private variables
+var _player_event = {
+	'T': 0.0,
+	'event_type': PLAYER_EVENT_TYPES.FW_TRUST,
+	'data': '',
+}
 
 # ----- onready variables
 @onready var _mapod = $Mapod
@@ -57,19 +66,15 @@ func _unhandled_input(event):
 			rotate_vector.x = -1
 		_mapod.mapod_rotate(rotate_vector)
 
+
 func _physics_process(_delta):
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		if Input.is_action_pressed("mapod_w"):
-			if multiplayer.get_peers().size() > 0:
-				#rpc_id(1, "fw_thrust", name)
-				fw_thrust.rpc_id(1, name)
-			else:
-				_mapod.fw_thrust()
+			_mapod.fw_thrust()
+			_player_event.event_type = PLAYER_EVENT_TYPES.FW_TRUST
+			emit_signal("player_event_requested", _player_event)
 		if Input.is_action_pressed("mapod_s"):
-			if multiplayer.get_peers().size() > 0:
-				rpc_id(1, "bk_thrust", name)
-			else:
-				_mapod.bk_thrust()
+			_mapod.bk_thrust()
 		if Input.is_action_pressed("mapod_a"):
 			_mapod.lf_thrust()
 		if Input.is_action_pressed("mapod_d"):
