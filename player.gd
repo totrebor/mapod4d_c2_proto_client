@@ -17,8 +17,9 @@ extends Node3D
 signal player_event_requested(event)
 
 # ----- enums
-enum PLAYER_EVENT_TYPES {
-	FW_TRUST = 0,
+enum PLAYER_EVENT_ACTION {
+	FW_THRUST = 0,
+	BK_THRUST,
 }
 
 # ----- constants
@@ -30,7 +31,7 @@ enum PLAYER_EVENT_TYPES {
 # ----- private variables
 var _player_event = {
 	'T': 0.0,
-	'event_type': PLAYER_EVENT_TYPES.FW_TRUST,
+	'action': PLAYER_EVENT_ACTION.FW_THRUST,
 	'data': '',
 }
 
@@ -45,6 +46,14 @@ var _player_event = {
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	pass # Replace with function body.
+	var sync_timer = Timer.new()
+	add_child(sync_timer)
+	sync_timer.timeout.connect(func():
+		_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
+		emit_signal("player_event_requested", _player_event)
+	)
+	sync_timer.start(1)
+	
 
 # ----- remaining built-in virtual methods
 
@@ -54,7 +63,6 @@ func _process(_delta):
 
 
 func _unhandled_input(event):
-	pass
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		#rotate_y(-event.relative.x * mouse_sensitivity)
 		#$Camera3D.rotate_x(-event.relative.y * mouse_sensitivity)
@@ -70,11 +78,13 @@ func _unhandled_input(event):
 func _physics_process(_delta):
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		if Input.is_action_pressed("mapod_w"):
-			_mapod.fw_thrust()
-			_player_event.event_type = PLAYER_EVENT_TYPES.FW_TRUST
+			##_mapod.fw_thrust()
+			_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
 			emit_signal("player_event_requested", _player_event)
 		if Input.is_action_pressed("mapod_s"):
-			_mapod.bk_thrust()
+			#_mapod.bk_thrust()
+			_player_event.action = PLAYER_EVENT_ACTION.BK_THRUST
+			emit_signal("player_event_requested", _player_event)
 		if Input.is_action_pressed("mapod_a"):
 			_mapod.lf_thrust()
 		if Input.is_action_pressed("mapod_d"):
@@ -97,14 +107,22 @@ func setup_multiplayer(player_id):
 	#label.text = "P%s" % get_index()
 
 
-@rpc("any_peer", "call_remote")
-func fw_thrust(player_name):
-	pass
+#@rpc("any_peer", "call_remote")
+#func fw_thrust(player_name):
+	#pass
 
 
-@rpc("any_peer", "call_remote")
-func bk_thrust(player_name):
-	pass
+#@rpc("any_peer", "call_remote")
+#func bk_thrust(player_name):
+	#pass
+
+func set_mapod_position(_position):
+	print("set_mapod_position")
+	var position = _position["position"]
+	var _mapod_tween = $Mapod.create_tween()
+	_mapod_tween.tween_property(
+			_mapod, "position", _position["position"], 0.08)
+	# OK _mapod.position = _position["position"]
 
 # ----- private methods
 
