@@ -245,15 +245,14 @@ func _get_latency():
 	if _server_connection != null:
 		_latency = _server_connection.get_statistic(
 					ENetPacketPeer.PEER_ROUND_TRIP_TIME) / 2
-		print("RTT " + str(_latency))
-		#print(latency)
+		#print("RTT " + str(_latency))
 		latency_variance = _server_connection.get_statistic(
 					ENetPacketPeer.PEER_ROUND_TRIP_TIME_VARIANCE)
 		_latency = (_ticks_sync_request_end_time -
 				_ticks_sync_request_begin_time) / 2
-		print("PING TEST " + str(_latency))
+		#print("PING TEST " + str(_latency))
 		if _latency < 0:
-			print("NEGATIVE LATENCY -------------------")
+			#print("NEGATIVE LATENCY -------------------")
 			_latency = 1
 
 		_latency_queue.push_back(_latency)
@@ -287,7 +286,7 @@ func _get_latency():
 	if _latency_decimal >= 1:
 		_latency_decimal -= 1
 		_latency += 1
-	print("latency " + str(_latency))
+	#print("latency " + str(_latency))
 	assert(_latency >= 0, "negative latency")
 	return _latency
 

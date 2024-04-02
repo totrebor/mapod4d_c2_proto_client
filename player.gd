@@ -48,11 +48,11 @@ func _ready():
 	pass # Replace with function body.
 	var sync_timer = Timer.new()
 	add_child(sync_timer)
-	sync_timer.timeout.connect(func():
-		_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
-		emit_signal("player_event_requested", _player_event)
-	)
-	sync_timer.start(1)
+	#sync_timer.timeout.connect(func():
+		#_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
+		#emit_signal("player_event_requested", _player_event)
+	#)
+	#sync_timer.start(1)
 	
 
 # ----- remaining built-in virtual methods
@@ -63,36 +63,49 @@ func _process(_delta):
 
 
 func _unhandled_input(event):
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		#rotate_y(-event.relative.x * mouse_sensitivity)
-		#$Camera3D.rotate_x(-event.relative.y * mouse_sensitivity)
-		#$Camera3D.rotation.x = clampf($Camera3D.rotation.x, -deg_to_rad(70), deg_to_rad(70))
-		var rotate_vector: Vector2 = Vector2(0, 0)
-		if event.relative.y > 0:
-			rotate_vector.x = 1
-		else:
-			rotate_vector.x = -1
-		_mapod.mapod_rotate(rotate_vector)
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		if Input.is_action_pressed("mapod_w"):
+			print("FW")
+			_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
+			emit_signal("player_event_requested", _player_event)
+		elif Input.is_action_pressed("mapod_s"):
+			print("BK")
+			_player_event.action = PLAYER_EVENT_ACTION.BK_THRUST
+			emit_signal("player_event_requested", _player_event)
+
+		if event is InputEventMouseMotion:
+			#rotate_y(-event.relative.x * mouse_sensitivity)
+			#$Camera3D.rotate_x(-event.relative.y * mouse_sensitivity)
+			#$Camera3D.rotation.x = clampf($Camera3D.rotation.x, -deg_to_rad(70), deg_to_rad(70))
+			var rotate_vector: Vector2 = Vector2(0, 0)
+			if event.relative.y > 0:
+				rotate_vector.x = 1
+			else:
+				rotate_vector.x = -1
+			_mapod.mapod_rotate(rotate_vector)
 
 
 func _physics_process(_delta):
-	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		if Input.is_action_pressed("mapod_w"):
-			##_mapod.fw_thrust()
-			_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
-			emit_signal("player_event_requested", _player_event)
-		if Input.is_action_pressed("mapod_s"):
+	pass
+	#if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		#if Input.is_action_pressed("mapod_w"):
+			#_mapod.fw_thrust()
+			#print("FW")
+			#_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
+			#emit_signal("player_event_requested", _player_event)
+		#if Input.is_action_pressed("mapod_s"):
 			#_mapod.bk_thrust()
-			_player_event.action = PLAYER_EVENT_ACTION.BK_THRUST
-			emit_signal("player_event_requested", _player_event)
-		if Input.is_action_pressed("mapod_a"):
-			_mapod.lf_thrust()
-		if Input.is_action_pressed("mapod_d"):
-			_mapod.rg_thrust()
-		if Input.is_action_pressed("mapod_q"):
-			_mapod.up_thrust()
-		if Input.is_action_pressed("mapod_space"):
-			_mapod.dw_thrust()
+			#print("BK")
+			#_player_event.action = PLAYER_EVENT_ACTION.BK_THRUST
+			#emit_signal("player_event_requested", _player_event)
+		#if Input.is_action_pressed("mapod_a"):
+			#_mapod.lf_thrust()
+		#if Input.is_action_pressed("mapod_d"):
+			#_mapod.rg_thrust()
+		#if Input.is_action_pressed("mapod_q"):
+			#_mapod.up_thrust()
+		#if Input.is_action_pressed("mapod_space"):
+			#_mapod.dw_thrust()
 
 
 # ----- public methods
