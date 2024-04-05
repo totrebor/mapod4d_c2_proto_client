@@ -64,15 +64,30 @@ func _process(_delta):
 
 func _unhandled_input(event):
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		var test = Vector4(
+			int(Input.is_action_pressed("mapod_w")) * 1.0,
+			int(Input.is_action_pressed("mapod_s")) * -1.0,
+			int(Input.is_action_pressed("mapod_a")) * 1.0,
+			int(Input.is_action_pressed("mapod_s")) * -1.0
+		)
 		if Input.is_action_pressed("mapod_w"):
 			print("FW")
+			_mapod.fw_thrust()
 			_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
 			emit_signal("player_event_requested", _player_event)
 		elif Input.is_action_pressed("mapod_s"):
 			print("BK")
+			_mapod.bk_thrust()
 			_player_event.action = PLAYER_EVENT_ACTION.BK_THRUST
 			emit_signal("player_event_requested", _player_event)
+		elif Input.is_action_pressed("mapod_a"):
+			print("LF")
+			_mapod.lf_thrust()
+		elif Input.is_action_pressed("mapod_d"):
+			print("RG")
+			_mapod.rg_thrust()
 
+			
 		if event is InputEventMouseMotion:
 			#rotate_y(-event.relative.x * mouse_sensitivity)
 			#$Camera3D.rotate_x(-event.relative.y * mouse_sensitivity)
