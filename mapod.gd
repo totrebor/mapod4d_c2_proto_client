@@ -20,13 +20,14 @@ extends CharacterBody3D
 # ----- constants
 
 # ----- exported variables
-@export var acceleration = 20.0
 @export var mouse_sensitivity = 0.01
+@export var defaultSpeed = 30.0
 
 # ----- public variables
 
+
 # ----- private variables
-var _velocity = null
+var _speed = null
 
 
 # ----- onready variables
@@ -55,9 +56,10 @@ var _lerp_weight = 1.1
 var _move_enabled = true
 
 func _physics_process(delta):
-	# travels space in (1/_lerp_weight) * 0.016667 ms
+	# travels space in (1/_lerp_weight) * 0.016667 s
+	# _lerp_weight=0.05 travels 333,34 ms
 	if _lerp_weight <= 1.0:
-		_lerp_weight += 0.1
+		_lerp_weight += 0.05
 		var space_lerp = Vector3(0, 0, 0).lerp(_space, _lerp_weight)
 		var space_step = space_lerp - _space_travelled
 		_space_travelled += space_step
@@ -71,18 +73,6 @@ func _physics_process(delta):
 	else:
 		_move_enabled = true
 	pass
-	#if _velocity != null:
-		#current = current.lerp(Vector3(0, 0, 0), 0.1)
-		#if _space - current != Vector3(0, 0, 0):
-			#print("_physics_process_space ",_space - current)
-			#move_and_collide(_space - current)
-		#else:
-			#_velocity = null
-		
-		#
-		#move_and_collide(current)
-		#if current.length() <= 0:
-			#_velocity = null
 
 
 # ----- public methods
@@ -92,14 +82,26 @@ func mapod_rotate(_rotate_vector: Vector2):
 	pass
 
 
+func mapod_thrust(speed: Vector3):
+	var delta = get_physics_process_delta_time()
+	if delta != 0:
+		if _move_enabled == true:
+			_move_enabled = false
+			_speed = transform.basis * speed * defaultSpeed
+			_space = _speed * delta
+			_space_travelled = Vector3(0.0, 0.0, 0.0)
+			inc = 0
+			_lerp_weight = 0
+		
+	
 func fw_thrust():
 	var delta = get_physics_process_delta_time()
 	#linear_velocity.z += (acceleration * delta)
 	if _move_enabled == true:
 		_move_enabled = false
-		_velocity = transform.basis * Vector3(0, 0, 15.0)
-		print("velocity " + str(_velocity))
-		_space = _velocity * delta
+		_speed = transform.basis * Vector3(0, 0, 30.0)
+		print("velocity " + str(_speed))
+		_space = _speed * delta
 		_space_travelled = Vector3(0.0, 0.0, 0.0)
 		inc = 0
 		_lerp_weight = 0
@@ -112,9 +114,9 @@ func bk_thrust():
 	#linear_velocity.z += (-acceleration * delta)
 	if _move_enabled == true:
 		_move_enabled = false
-		_velocity = transform.basis * Vector3(0, 0, -15.0)
-		print("velocity " + str(_velocity))
-		_space = _velocity * delta
+		_speed = transform.basis * Vector3(0, 0, -15.0)
+		print("velocity " + str(_speed))
+		_space = _speed * delta
 		_space_travelled = Vector3(0.0, 0.0, 0.0)
 		inc = 0
 		_lerp_weight = 0
@@ -126,9 +128,9 @@ func lf_thrust():
 	#linear_velocity.x += (acceleration * delta)
 	if _move_enabled == true:
 		_move_enabled = false
-		_velocity = transform.basis * Vector3(15.0, 0, 0)
-		print("velocity " + str(_velocity))
-		_space = _velocity * delta
+		_speed = transform.basis * Vector3(15.0, 0, 0)
+		print("speed " + str(_speed))
+		_space = _speed * delta
 		_space_travelled = Vector3(0.0, 0.0, 0.0)
 		inc = 0
 		_lerp_weight = 0
@@ -140,9 +142,9 @@ func rg_thrust():
 	#linear_velocity.x += (-acceleration * delta)
 	if _move_enabled == true:
 		_move_enabled = false
-		_velocity = transform.basis * Vector3(-15.0, 0, 0)
-		print("velocity " + str(_velocity))
-		_space = _velocity * delta
+		_speed = transform.basis * Vector3(-15.0, 0, 0)
+		print("speed " + str(_speed))
+		_space = _speed * delta
 		_space_travelled = Vector3(0.0, 0.0, 0.0)
 		inc = 0
 		_lerp_weight = 0

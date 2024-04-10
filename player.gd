@@ -64,28 +64,33 @@ func _process(_delta):
 
 func _unhandled_input(event):
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		var test = Vector4(
-			int(Input.is_action_pressed("mapod_w")) * 1.0,
-			int(Input.is_action_pressed("mapod_s")) * -1.0,
-			int(Input.is_action_pressed("mapod_a")) * 1.0,
-			int(Input.is_action_pressed("mapod_s")) * -1.0
+		var move_vec = Vector3(
+			float(Input.is_action_pressed("mapod_a")) * 1.0 +
+			float(Input.is_action_pressed("mapod_d")) * -1.0,
+			float(Input.is_action_pressed("mapod_q")) * 1.0 +
+			float(Input.is_action_pressed("mapod_space")) * -1.0,
+			float(Input.is_action_pressed("mapod_w")) * 1.0 +
+			float(Input.is_action_pressed("mapod_s")) * -1.0
 		)
-		if Input.is_action_pressed("mapod_w"):
-			print("FW")
-			_mapod.fw_thrust()
-			_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
-			emit_signal("player_event_requested", _player_event)
-		elif Input.is_action_pressed("mapod_s"):
-			print("BK")
-			_mapod.bk_thrust()
-			_player_event.action = PLAYER_EVENT_ACTION.BK_THRUST
-			emit_signal("player_event_requested", _player_event)
-		elif Input.is_action_pressed("mapod_a"):
-			print("LF")
-			_mapod.lf_thrust()
-		elif Input.is_action_pressed("mapod_d"):
-			print("RG")
-			_mapod.rg_thrust()
+		if move_vec.length() != 0:
+			_mapod.mapod_thrust(move_vec)
+		
+		#if Input.is_action_pressed("mapod_w"):
+			#print("FW")
+			#_mapod.mapod_thrust(Vector3(0, 0, 1))
+			#_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
+			#emit_signal("player_event_requested", _player_event)
+		#elif Input.is_action_pressed("mapod_s"):
+			#print("BK")
+			#_mapod.mapod_thrust(Vector3(0, 0, -1))
+			#_player_event.action = PLAYER_EVENT_ACTION.BK_THRUST
+			#emit_signal("player_event_requested", _player_event)
+		#elif Input.is_action_pressed("mapod_a"):
+			#print("LF")
+			#_mapod.mapod_thrust(Vector3(1, 0, 0))
+		#elif Input.is_action_pressed("mapod_d"):
+			#print("RG")
+			#_mapod.mapod_thrust(Vector3(-1, 0, 0))
 
 			
 		if event is InputEventMouseMotion:
@@ -102,25 +107,6 @@ func _unhandled_input(event):
 
 func _physics_process(_delta):
 	pass
-	#if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		#if Input.is_action_pressed("mapod_w"):
-			#_mapod.fw_thrust()
-			#print("FW")
-			#_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
-			#emit_signal("player_event_requested", _player_event)
-		#if Input.is_action_pressed("mapod_s"):
-			#_mapod.bk_thrust()
-			#print("BK")
-			#_player_event.action = PLAYER_EVENT_ACTION.BK_THRUST
-			#emit_signal("player_event_requested", _player_event)
-		#if Input.is_action_pressed("mapod_a"):
-			#_mapod.lf_thrust()
-		#if Input.is_action_pressed("mapod_d"):
-			#_mapod.rg_thrust()
-		#if Input.is_action_pressed("mapod_q"):
-			#_mapod.up_thrust()
-		#if Input.is_action_pressed("mapod_space"):
-			#_mapod.dw_thrust()
 
 
 # ----- public methods
