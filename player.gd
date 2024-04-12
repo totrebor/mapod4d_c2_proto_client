@@ -92,7 +92,6 @@ func _unhandled_input(event):
 			#print("RG")
 			#_mapod.mapod_thrust(Vector3(-1, 0, 0))
 
-			
 		if event is InputEventMouseMotion:
 			#rotate_y(-event.relative.x * mouse_sensitivity)
 			#$Camera3D.rotate_x(-event.relative.y * mouse_sensitivity)
