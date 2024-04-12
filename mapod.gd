@@ -28,6 +28,7 @@ extends CharacterBody3D
 
 # ----- private variables
 var _speed = null
+#var _camera = $Camera3D
 
 
 # ----- onready variables
@@ -55,6 +56,9 @@ var inc = 0
 var _lerp_weight = 1.1
 var _move_enabled = true
 
+
+var _rotate_lerp_weight = 1.1
+
 func _physics_process(delta):
 	# travels space in (1/_lerp_weight) * 0.016667 s
 	# _lerp_weight=0.05 travels 333,34 ms
@@ -72,14 +76,18 @@ func _physics_process(delta):
 		move_and_collide(space_step)
 	else:
 		_move_enabled = true
-	pass
+	
+	if _rotate_lerp_weight <= 1.1:
+		_rotate_lerp_weight += 0.05
 
 
 # ----- public methods
-func mapod_rotate(_rotate_vector: Vector2):
+func mapod_rotate(rotate_vector: Vector2):
+	rotate_y(rotate_vector.y)
+	#_camera.rotate_x(rotate_vector.x)
 	#rotate_y(-event.relative.x * mouse_sensitivity)
 	#_camera.rotate_x(-rotate_vector.x * mouse_sensitivity)
-	pass
+	_rotate_lerp_weight = 0.0
 
 
 func mapod_thrust(speed: Vector3):

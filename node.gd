@@ -38,6 +38,7 @@ var sync_timer = null
 var server_ticks_delta = 0
 
 # ----- private variables
+var _network_error = false
 var _server_connection = null
 var _latency_queue = []
 var _latency_queue_size: int = LATENCY_QUEUE_SIZE
@@ -70,11 +71,16 @@ func _ready():
 	else:
 		if _latency_queue_size % 2 == 0:
 			_latency_queue_size += 1
-	multiplayer_peer.create_client(ADDRESS, PORT)
-	multiplayer.multiplayer_peer = multiplayer_peer
-	multiplayer_peer.get_peer(1).set_timeout(0, 0, 3000)  # 3 seconds max timeout
-	multiplayer.connected_to_server.connect(_on_connected_to_server)
-	multiplayer.connection_failed.connect(_on_connection_failed)
+	if multiplayer_peer.create_client(ADDRESS, PORT) == OK:
+		multiplayer.multiplayer_peer = multiplayer_peer
+		var peer = multiplayer_peer.get_peer(1)
+		if peer != null:
+			multiplayer_peer.get_peer(1).set_timeout(0, 0, 3000)  # 3 seconds max timeout
+		multiplayer.connected_to_server.connect(_on_connected_to_server)
+		multiplayer.connection_failed.connect(_on_connection_failed)
+	else:
+		_network_error = true
+		call_deferred("connection_failed")
 
 
 # ----- remaining built-in virtual methods
@@ -205,6 +211,13 @@ func _on_connected_to_server():
 	add_child(sync_timer)
 	sync_timer.timeout.connect(_on_sync_ticks)
 	sync_timer.start(0.02)
+
+
+func connection_failed():
+	print("Connection ERROR!")
+	_peer_id = null
+	_server_connection = null
+	$PlayerSpawnerArea.local_spawn()
 
 
 func _on_connection_failed():

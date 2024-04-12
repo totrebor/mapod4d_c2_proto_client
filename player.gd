@@ -72,8 +72,16 @@ func _unhandled_input(event):
 			float(Input.is_action_pressed("mapod_w")) * 1.0 +
 			float(Input.is_action_pressed("mapod_s")) * -1.0
 		)
+		var rotate_vec = Vector2(
+			0.0,
+			float(Input.is_action_pressed("mapod_rotate_r")) * 0.1 * PI +
+			float(Input.is_action_pressed("mapod_rotate_l")) * 0.1 * -PI
+		)
+		
 		if move_vec.length() != 0:
 			_mapod.mapod_thrust(move_vec)
+		if rotate_vec.length() != 0:
+			_mapod.mapod_rotate(rotate_vec)
 		
 		#if Input.is_action_pressed("mapod_w"):
 			#print("FW")
