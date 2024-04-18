@@ -56,8 +56,10 @@ var inc = 0
 var _lerp_weight = 1.1
 var _move_enabled = true
 
-
+var _rotate_y = 0
+var _rotare_ado = 0
 var _rotate_lerp_weight = 1.1
+var rotate_inc = 0
 
 func _physics_process(delta):
 	# travels space in (1/_lerp_weight) * 0.016667 s
@@ -79,11 +81,16 @@ func _physics_process(delta):
 	
 	if _rotate_lerp_weight <= 1.1:
 		_rotate_lerp_weight += 0.05
+		_rotate_lerp_weight += 5
+		rotate_inc += 1
+		rotate_y(_rotate_y)
 
 
 # ----- public methods
 func mapod_rotate(rotate_vector: Vector2):
-	rotate_y(rotate_vector.y)
+	#rotate_y(rotate_vector.y)
+	_rotate_y = rotate_vector.y
+
 	#_camera.rotate_x(rotate_vector.x)
 	#rotate_y(-event.relative.x * mouse_sensitivity)
 	#_camera.rotate_x(-rotate_vector.x * mouse_sensitivity)
