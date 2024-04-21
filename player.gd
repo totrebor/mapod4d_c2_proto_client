@@ -35,6 +35,20 @@ var _player_event = {
 	'data': '',
 }
 
+# movement values
+var _mp_mv_left = 0
+var _mp_mv_right = 0
+var _mp_mv_forward = 0
+var _mp_mv_backward = 0
+var _mp_mv_up = 0
+var _mp_mv_down = 0
+
+# rotate values
+var _mp_rt_up = 0
+var _mp_rt_down = 0
+var _mp_rt_left = 0
+var _mp_rt_right = 0
+
 # ----- onready variables
 @onready var _mapod = $Mapod
 @onready var _camera = $Mapod/Camera3D
@@ -64,56 +78,80 @@ func _process(_delta):
 
 func _unhandled_input(event):
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		var move_vec = Vector3(
-			float(Input.is_action_pressed("mapod_a")) * 1.0 +
-			float(Input.is_action_pressed("mapod_d")) * -1.0,
-			float(Input.is_action_pressed("mapod_q")) * 1.0 +
-			float(Input.is_action_pressed("mapod_space")) * -1.0,
-			float(Input.is_action_pressed("mapod_w")) * 1.0 +
-			float(Input.is_action_pressed("mapod_s")) * -1.0
-		)
+		if event.is_action_pressed("mapod_a"):
+			_mp_mv_left = 1
+		elif event.is_action_released("mapod_a"):
+			_mp_mv_left = 0
+
+		elif event.is_action_pressed("mapod_d"):
+			_mp_mv_right = 1
+		elif event.is_action_released("mapod_d"):
+			_mp_mv_right = 0
+
+		elif event.is_action_pressed("mapod_q"):
+			_mp_mv_up = 1
+		elif event.is_action_released("mapod_q"):
+			_mp_mv_up = 0
+
+		elif event.is_action_pressed("mapod_space"):
+			_mp_mv_down = 1
+		elif event.is_action_released("mapod_space"):
+			_mp_mv_down = 0
+
+		elif event.is_action_pressed("mapod_w"):
+			_mp_mv_forward = 1
+		elif event.is_action_released("mapod_w"):
+			_mp_mv_forward = 0
+
+		elif event.is_action_pressed("mapod_s"):
+			_mp_mv_backward = 1
+		elif event.is_action_released("mapod_s"):
+			_mp_mv_backward = 0
+
+		elif event.is_action_pressed("mapod_rotate_u"):
+			_mp_rt_up = 1
+		elif event.is_action_released("mapod_rotate_u"):
+			_mp_rt_up = 0
+
+		#var move_vec = Vector3(
+			#float(event.is_action_pressed("mapod_a")) * 1.0 +
+			#float(event.is_action_pressed("mapod_d")) * -1.0,
+			#float(event.is_action_pressed("mapod_q")) * 1.0 +
+			#float(event.is_action_pressed("mapod_space")) * -1.0,
+			#float(event.is_action_pressed("mapod_w")) * 1.0 +
+			#float(event.is_action_pressed("mapod_s")) * -1.0
+		#)
 		var rotate_vec = Vector2(
-			0.0,
-			float(Input.is_action_pressed("mapod_rotate_r")) * 0.1 * PI +
-			float(Input.is_action_pressed("mapod_rotate_l")) * 0.1 * -PI
+			float(event.is_action_pressed("mapod_rotate_u")) * 0.05 * PI +
+			float(event.is_action_pressed("mapod_rotate_d")) * 0.05 * -PI,
+			float(event.is_action_pressed("mapod_rotate_r")) * 0.05 * -PI +
+			float(event.is_action_pressed("mapod_rotate_l")) * 0.05 * PI
 		)
 		
-		if move_vec.length() != 0:
-			_mapod.mapod_thrust(move_vec)
+		#if move_vec.length() != 0:
+		#	_mapod.mapod_thrust(move_vec)
 		if rotate_vec.length() != 0:
 			_mapod.mapod_rotate(rotate_vec)
 		
-		#if Input.is_action_pressed("mapod_w"):
-			#print("FW")
-			#_mapod.mapod_thrust(Vector3(0, 0, 1))
-			#_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
-			#emit_signal("player_event_requested", _player_event)
-		#elif Input.is_action_pressed("mapod_s"):
-			#print("BK")
-			#_mapod.mapod_thrust(Vector3(0, 0, -1))
-			#_player_event.action = PLAYER_EVENT_ACTION.BK_THRUST
-			#emit_signal("player_event_requested", _player_event)
-		#elif Input.is_action_pressed("mapod_a"):
-			#print("LF")
-			#_mapod.mapod_thrust(Vector3(1, 0, 0))
-		#elif Input.is_action_pressed("mapod_d"):
-			#print("RG")
-			#_mapod.mapod_thrust(Vector3(-1, 0, 0))
-
 		if event is InputEventMouseMotion:
-			#rotate_y(-event.relative.x * mouse_sensitivity)
-			#$Camera3D.rotate_x(-event.relative.y * mouse_sensitivity)
-			#$Camera3D.rotation.x = clampf($Camera3D.rotation.x, -deg_to_rad(70), deg_to_rad(70))
-			var rotate_vector: Vector2 = Vector2(0, 0)
-			if event.relative.y > 0:
-				rotate_vector.x = 1
-			else:
-				rotate_vector.x = -1
-			_mapod.mapod_rotate(rotate_vector)
+			pass
+			#var rotate_vector: Vector2 = Vector2(0, 0)
+			#if event.relative.y > 0:
+				#rotate_vector.x = 1
+			#else:
+				#rotate_vector.x = -1
+			#_mapod.mapod_rotate(rotate_vector)
 
 
 func _physics_process(_delta):
-	pass
+	var move_vec = Vector3(
+		_mp_mv_left * 1.0 + _mp_mv_right * -1.0,
+		_mp_mv_up * 1.0 + _mp_mv_down * -1.0,
+		_mp_mv_forward * 1.0 + _mp_mv_backward * -1.0,
+	)
+	if move_vec.length() != 0:
+		#_mapod.mapod_thrust(move_vec)
+		call_deferred("_mapod_thrust", move_vec)
 
 
 # ----- public methods
@@ -147,7 +185,10 @@ func set_mapod_position(_position):
 
 # ----- private methods
 
+func _mapod_thrust(move_vec):
+	_mapod.mapod_thrust(move_vec)
 
 
-
+func _mapod_rotate(rotate_vec):
+	_mapod.mapod_rotate(rotate_vec)
 

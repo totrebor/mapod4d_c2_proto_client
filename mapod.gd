@@ -28,11 +28,9 @@ extends CharacterBody3D
 
 # ----- private variables
 var _speed = null
-#var _camera = $Camera3D
-
 
 # ----- onready variables
-#@onready var _camera = $Camera3D
+@onready var _camera = $Camera3D
 
 # ----- optional built-in virtual _init method
 
@@ -57,9 +55,14 @@ var _lerp_weight = 1.1
 var _move_enabled = true
 
 var _rotate_y = 0
-var _rotare_ado = 0
-var _rotate_lerp_weight = 1.1
-var rotate_inc = 0
+var _rotate_y_ado = 0
+var _rotate_y_lerp_weight = 1.1
+var rotate_y_inc = 0
+var _rotate_x = 0
+var _rotate_x_ado = 0
+var _rotate_x_lerp_weight = 1.1
+var rotate_x_inc = 0
+var _rotate_enabled = true
 
 func _physics_process(delta):
 	# travels space in (1/_lerp_weight) * 0.016667 s
@@ -69,32 +72,49 @@ func _physics_process(delta):
 		var space_lerp = Vector3(0, 0, 0).lerp(_space, _lerp_weight)
 		var space_step = space_lerp - _space_travelled
 		_space_travelled += space_step
-		print(str(inc) + " space_lerp " + str(space_lerp));
+		#print(str(inc) + " space_lerp " + str(space_lerp));
 		print(str(inc) + " _lerp_weight " + str(_lerp_weight));
-		print(str(inc) + " space_step " + str(space_step));
-		print(str(inc) + " _space " + str(_space));
-		print(str(inc) + " _space_travelled " + str(_space_travelled));
+		#print(str(inc) + " space_step " + str(space_step));
+		#print(str(inc) + " _space " + str(_space));
+		#print(str(inc) + " _space_travelled " + str(_space_travelled));
 		inc += 1
 		move_and_collide(space_step)
 	else:
 		_move_enabled = true
 	
-	if _rotate_lerp_weight <= 1.1:
-		_rotate_lerp_weight += 0.05
-		_rotate_lerp_weight += 5
-		rotate_inc += 1
-		rotate_y(_rotate_y)
+	if _rotate_y_lerp_weight <= 1.0:
+		_rotate_y_lerp_weight += 0.05
+		var rotate_y_lerp = lerp(0.0, _rotate_y, _rotate_y_lerp_weight)
+		var rotate_y_step = rotate_y_lerp - _rotate_y_ado
+		_rotate_y_ado += rotate_y_step
+		rotate_y_inc += 1
+		rotate_y(rotate_y_step)
+	elif _rotate_x_lerp_weight <= 1.0:
+		_rotate_x_lerp_weight += 0.05
+		var rotate_x_lerp = lerp(0.0, _rotate_x, _rotate_x_lerp_weight)
+		var rotate_x_step = rotate_x_lerp - _rotate_x_ado
+		_rotate_x_ado += rotate_x_step
+		rotate_x_inc += 1
+		_camera.rotate_x(rotate_x_step)
+	else:
+		_rotate_enabled = true
 
 
 # ----- public methods
 func mapod_rotate(rotate_vector: Vector2):
 	#rotate_y(rotate_vector.y)
-	_rotate_y = rotate_vector.y
-
 	#_camera.rotate_x(rotate_vector.x)
 	#rotate_y(-event.relative.x * mouse_sensitivity)
 	#_camera.rotate_x(-rotate_vector.x * mouse_sensitivity)
-	_rotate_lerp_weight = 0.0
+	if _rotate_enabled == true:
+		if rotate_vector.y != 0:
+			_rotate_y = rotate_vector.y
+			_rotate_y_lerp_weight = 0.0
+			_rotate_y_ado = 0.0
+		elif rotate_vector.x != 0:
+			_rotate_x = rotate_vector.x
+			_rotate_x_lerp_weight = 0.0
+			_rotate_x_ado = 0.0
 
 
 func mapod_thrust(speed: Vector3):
