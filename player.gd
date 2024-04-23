@@ -121,6 +121,27 @@ func _unhandled_input(event):
 			#float(event.is_action_pressed("mapod_w")) * 1.0 +
 			#float(event.is_action_pressed("mapod_s")) * -1.0
 		#)
+		
+		if event.is_action_pressed("mapod_rotate_u"):
+			_mp_rt_up = 1
+		elif event.is_action_released("mapod_rotate_u"):
+			_mp_rt_up = 0
+
+		elif event.is_action_pressed("mapod_rotate_d"):
+			_mp_rt_down = 1
+		elif event.is_action_released("mapod_rotate_d"):
+			_mp_rt_down = 0
+
+		elif event.is_action_pressed("mapod_rotate_r"):
+			_mp_rt_right = 1
+		elif event.is_action_released("mapod_rotate_r"):
+			_mp_rt_right = 0
+
+		elif event.is_action_pressed("mapod_rotate_l"):
+			_mp_rt_left = 1
+		elif event.is_action_released("mapod_rotate_l"):
+			_mp_rt_left = 0
+
 		var rotate_vec = Vector2(
 			float(event.is_action_pressed("mapod_rotate_u")) * 0.05 * PI +
 			float(event.is_action_pressed("mapod_rotate_d")) * 0.05 * -PI,
@@ -130,8 +151,8 @@ func _unhandled_input(event):
 		
 		#if move_vec.length() != 0:
 		#	_mapod.mapod_thrust(move_vec)
-		if rotate_vec.length() != 0:
-			_mapod.mapod_rotate(rotate_vec)
+		#if rotate_vec.length() != 0:
+			#_mapod.mapod_rotate(rotate_vec)
 		
 		if event is InputEventMouseMotion:
 			pass
@@ -149,9 +170,15 @@ func _physics_process(_delta):
 		_mp_mv_up * 1.0 + _mp_mv_down * -1.0,
 		_mp_mv_forward * 1.0 + _mp_mv_backward * -1.0,
 	)
+	var rotate_vec = Vector2(
+			_mp_rt_up * 0.05 * PI + _mp_rt_down * 0.05 * -PI,
+			_mp_rt_right * 0.05 * -PI + _mp_rt_left * 0.05 * PI
+		)
 	if move_vec.length() != 0:
 		#_mapod.mapod_thrust(move_vec)
 		call_deferred("_mapod_thrust", move_vec)
+	if rotate_vec.length() != 0:
+		call_deferred("_mapod_rotate",rotate_vec)
 
 
 # ----- public methods
