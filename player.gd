@@ -60,13 +60,17 @@ var _mp_rt_right = 0
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	pass # Replace with function body.
-	var sync_timer = Timer.new()
-	add_child(sync_timer)
+	#var sync_timer = Timer.new()
+	#add_child(sync_timer)
 	#sync_timer.timeout.connect(func():
 		#_player_event.action = PLAYER_EVENT_ACTION.FW_THRUST
 		#emit_signal("player_event_requested", _player_event)
 	#)
 	#sync_timer.start(1)
+	#var input_timer = Timer.new()
+	#add_child(input_timer)
+	#input_timer.timeout.connect(_mapod_elab_input)
+	#input_timer.start(0.1)
 	
 
 # ----- remaining built-in virtual methods
@@ -142,17 +146,18 @@ func _unhandled_input(event):
 		elif event.is_action_released("mapod_rotate_l"):
 			_mp_rt_left = 0
 
-		var rotate_vec = Vector2(
-			float(event.is_action_pressed("mapod_rotate_u")) * 0.05 * PI +
-			float(event.is_action_pressed("mapod_rotate_d")) * 0.05 * -PI,
-			float(event.is_action_pressed("mapod_rotate_r")) * 0.05 * -PI +
-			float(event.is_action_pressed("mapod_rotate_l")) * 0.05 * PI
-		)
+		#var rotate_vec = Vector2(
+			#float(event.is_action_pressed("mapod_rotate_u")) * 0.05 * PI +
+			#float(event.is_action_pressed("mapod_rotate_d")) * 0.05 * -PI,
+			#float(event.is_action_pressed("mapod_rotate_r")) * 0.05 * -PI +
+			#float(event.is_action_pressed("mapod_rotate_l")) * 0.05 * PI
+		#)
 		
 		#if move_vec.length() != 0:
 		#	_mapod.mapod_thrust(move_vec)
 		#if rotate_vec.length() != 0:
 			#_mapod.mapod_rotate(rotate_vec)
+		#_mapod_elab_input()
 		
 		if event is InputEventMouseMotion:
 			pass
@@ -165,20 +170,7 @@ func _unhandled_input(event):
 
 
 func _physics_process(_delta):
-	var move_vec = Vector3(
-		_mp_mv_left * 1.0 + _mp_mv_right * -1.0,
-		_mp_mv_up * 1.0 + _mp_mv_down * -1.0,
-		_mp_mv_forward * 1.0 + _mp_mv_backward * -1.0,
-	)
-	var rotate_vec = Vector2(
-			_mp_rt_up * 0.05 * PI + _mp_rt_down * 0.05 * -PI,
-			_mp_rt_right * 0.05 * -PI + _mp_rt_left * 0.05 * PI
-		)
-	if move_vec.length() != 0:
-		#_mapod.mapod_thrust(move_vec)
-		call_deferred("_mapod_thrust", move_vec)
-	if rotate_vec.length() != 0:
-		call_deferred("_mapod_rotate",rotate_vec)
+	_mapod_elab_input()
 
 
 # ----- public methods
@@ -212,10 +204,49 @@ func set_mapod_position(_position):
 
 # ----- private methods
 
+func _mapod_elab_input():
+	var move_vec = Vector3(
+		_mp_mv_left * 1.0 + _mp_mv_right * -1.0,
+		_mp_mv_up * 1.0 + _mp_mv_down * -1.0,
+		_mp_mv_forward * 1.0 + _mp_mv_backward * -1.0,
+	)
+	var rotate_vec = Vector2(
+			_mp_rt_up * 0.05 * PI + _mp_rt_down * 0.05 * -PI,
+			_mp_rt_right * 0.05 * -PI + _mp_rt_left * 0.05 * PI
+		)
+	if move_vec.length() != 0:
+		call_deferred("_mapod_thrust", move_vec)
+	if rotate_vec.length() != 0:
+		call_deferred("_mapod_rotate",rotate_vec)
+
+
 func _mapod_thrust(move_vec):
-	_mapod.mapod_thrust(move_vec)
+	if _mapod.can_thrust():
+		var event = {
+			"T": Time.get_ticks_msec(),
+			"ME": "thrust",
+			"input": move_vec
+		}
+		_mapod.thrust_event_buffer.push(event, 0)
+	#if _mapod.can_thrust():
+		#print("mapod_event " + str())
+		#_mapod.mapod_thrust(move_vec)
 
 
 func _mapod_rotate(rotate_vec):
-	_mapod.mapod_rotate(rotate_vec)
+	if _mapod.can_rotate():
+		var event = {
+			"T": Time.get_ticks_msec(),
+			"ME": "rotate",
+			"input": rotate_vec
+		}
+		_mapod.rotate_event_buffer.push(event, 0)
+	pass
+	#if _mapod.can_rotate():
+		#print("mapod_event " + str({
+			#"mt": "m",
+			#"tick": Time.get_ticks_msec(),
+			#"input": rotate_vec
+		#}))
+		#_mapod.mapod_rotate(rotate_vec)
 
