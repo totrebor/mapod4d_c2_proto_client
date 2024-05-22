@@ -146,16 +146,15 @@ func can_thrust():
 
 
 func mapod_thrust(speed: Vector3):
-	var delta = get_physics_process_delta_time()
-	delta = 0.020
-	if delta != 0:
+	var thrust_time = 0.4
+	if thrust_time != 0:
 		if _thrust_enabled == true:
 			_thrust_enabled = false
 			_speed = transform.basis * speed * defaultSpeed
-			_space = _speed * delta * 20.0
+			_space = _speed * thrust_time
 			_space_travelled = Vector3(0.0, 0.0, 0.0)
 			inc = 0
-			print(_space + position)
+			#print(_space + " " + position)
 			_lerp_weight = 0
 		
 	

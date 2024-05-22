@@ -180,12 +180,6 @@ func send_player_event(_peer_id_rpc, _event_rpc):
 
 
 @rpc("authority", "call_remote", "reliable")
-func send_answer_player_event(_peer_id_rpc, _event_rpc):
-	print("PLAYER ANSWER")
-	pass
-
-
-@rpc("authority", "call_remote", "reliable")
 func send_server_event(event):
 	print(event)
 
@@ -194,9 +188,10 @@ func send_server_event(event):
 func send_metaverse_status(metaverese_status):
 	print(metaverese_status)
 	# QUESTA E' SOLO UNA PROVA VA FATTA INTERPOLAZIONE
+	# ANCHE PER GLI ALTRI DRONI
 	for drone in metaverese_status.drones.keys():
 		var player_name = "PlayerSpawnerArea/" + str(drone)
-		var player_node = get_node(player_name)
+		var player_node = get_node_or_null(player_name)
 		if player_node != null:
 			player_node.set_mapod_position(
 					metaverese_status.drones[str(drone)])
@@ -206,7 +201,6 @@ func send_metaverse_status(metaverese_status):
 func _on_connected_to_server():
 	print("Connection OK!")
 	await get_tree().create_timer(1).timeout
-	_peer_id = null
 	_server_connection = multiplayer.multiplayer_peer.get_peer(1)
 	for index in range (0, _latency_queue_size + 1):
 		_on_sync_ticks()
@@ -310,10 +304,18 @@ func _get_latency():
 
 func _on_sync_ticks():
 	#print("start _on_sync_ticks")
-	if _peer_id != null:
+	if _peer_id != null and is_peer_connected():
 		#print("request _on_sync_ticks")
 		ticks_sync_request.rpc_id(1, _peer_id, Time.get_ticks_msec())
 	#print("end _on_sync_ticks")
+
+
+func is_peer_connected():
+	var ret_val = false
+	var con_status = multiplayer.multiplayer_peer.get_connection_status()
+	if  con_status == MultiplayerPeer.CONNECTION_CONNECTED:
+		ret_val = true
+	return ret_val
 
 
 func serverTime():
@@ -321,7 +323,9 @@ func serverTime():
 
 
 func _on_player_event_requested(event):
+	print("PLAYER EVENT")
 	if _peer_id != null:
+		print("PLAYER EVENT START")
 		event.peer_id = _peer_id
 		event.type = MPEVENT_TYPE.DRONE
 		event.T = serverTime()
