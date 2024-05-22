@@ -29,11 +29,11 @@ enum PLAYER_EVENT_ACTION {
 # ----- public variables
 
 # ----- private variables
-var _player_event = {
-	'T': 0.0,
-	'action': PLAYER_EVENT_ACTION.FW_THRUST,
-	'data': '',
-}
+#var _player_event = {
+	#'T': 0.0,
+	#'action': PLAYER_EVENT_ACTION.FW_THRUST,
+	#'data': '',
+#}
 
 # movement values
 var _mp_mv_left = 0
@@ -196,7 +196,7 @@ func setup_multiplayer(player_id):
 
 func set_mapod_position(_position):
 	print("set_mapod_position")
-	var position = _position["position"]
+	#var position = _position["position"]
 	var _mapod_tween = $Mapod.create_tween()
 	_mapod_tween.tween_property(
 			_mapod, "position", _position["position"], 0.08)
@@ -227,10 +227,8 @@ func _mapod_thrust(move_vec):
 			"ME": "thrust",
 			"input": move_vec
 		}
+		_player_event_request(event)
 		_mapod.thrust_event_buffer.push(event, 0)
-	#if _mapod.can_thrust():
-		#print("mapod_event " + str())
-		#_mapod.mapod_thrust(move_vec)
 
 
 func _mapod_rotate(rotate_vec):
@@ -240,13 +238,17 @@ func _mapod_rotate(rotate_vec):
 			"ME": "rotate",
 			"input": rotate_vec
 		}
+		_player_event_request(event)
 		_mapod.rotate_event_buffer.push(event, 0)
-	pass
-	#if _mapod.can_rotate():
-		#print("mapod_event " + str({
-			#"mt": "m",
-			#"tick": Time.get_ticks_msec(),
-			#"input": rotate_vec
-		#}))
-		#_mapod.mapod_rotate(rotate_vec)
+
+
+func _player_event_request(event):
+	player_event_requested.emit(event)
+	# from server simulation (debug only)
+	var me = event["ME"]
+	if me == "thrust":
+		pass
+	elif me == "rotate":
+		pass
+
 

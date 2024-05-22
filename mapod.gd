@@ -26,6 +26,8 @@ extends CharacterBody3D
 # ----- public variables
 var thrust_event_buffer
 var rotate_event_buffer
+var srv_thrust_event_buffer
+var srv_rotate_event_buffer
 
 # ----- private variables
 var _speed = null
@@ -59,6 +61,8 @@ var _rotate_enabled = true
 func _ready():
 	thrust_event_buffer = MapodEventBuffer.new(1000)
 	rotate_event_buffer = MapodEventBuffer.new(1000)
+	srv_thrust_event_buffer = MapodEventBuffer.new(1000)
+	srv_rotate_event_buffer = MapodEventBuffer.new(1000)
 
 # ----- remaining built-in virtual methods
 
@@ -67,7 +71,7 @@ func _process(_delta):
 	pass # Replace with function body.
 
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	# travels space in (1/_lerp_weight) * 0.016667 s
 	# _lerp_weight=0.05 travels 333,34 ms
 	if _lerp_weight <= 1.0:
@@ -82,9 +86,9 @@ func _physics_process(delta):
 		#print(str(inc) + " _space_travelled " + str(_space_travelled));
 		inc += 1
 		move_and_collide(space_step)
-		if _lerp_weight > 1.0:
-			pass
+		if _lerp_weight >= 1.0: # it's a float
 			#print("arrivato " + str(position))
+			pass
 	else:
 		_thrust_enabled = true
 		call_deferred("_next_thrust_envent")

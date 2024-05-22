@@ -85,7 +85,7 @@ func _ready():
 
 # ----- remaining built-in virtual methods
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	pass # Replace with function body.
 	# try to do another sync
 	#client_clock += int(delta * 1000) + delta_latency
@@ -121,7 +121,7 @@ func server_name(peer_id, remote_server_name):
 
 ## authentication
 @rpc("any_peer", "call_remote")
-func user_auth_request(peer_id, _login, _password):
+func user_auth_request(_peer_id_rpc, _login, _password):
 	pass
 
 
@@ -142,7 +142,7 @@ func auth_confirmed(peer_id, auth_token):
 
 ## start the game -> create player
 @rpc("any_peer", "call_remote")
-func start_game(peer_id, auth_token):
+func start_game(_peer_id_rpc, _auth_token_rpc):
 	pass
 
 
@@ -152,15 +152,11 @@ func ready_to_go(peer_id):
 	_player_node = "PlayerSpawnerArea/" + str(peer_id)
 	var player_node = get_node(_player_node)
 	player_node.player_event_requested.connect(_on_player_event_requested)
-	if player_node.is_connected(
-			"player_event_requested", _on_player_event_requested):
-		player_node.connect(
-				"player_event_requested", _on_player_event_requested)
 
 
 ## ticks sync request
 @rpc("any_peer", "call_remote", "reliable")
-func ticks_sync_request(peer_id, client_tick):
+func ticks_sync_request(_peer_id_rpc, _client_tick_rpc):
 	# defined in the server
 	pass
 
@@ -178,8 +174,14 @@ func ticks_sync(client_tick, server_tick):
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func send_player_event(peer_id, event):
+func send_player_event(_peer_id_rpc, _event_rpc):
 	# defined in the server
+	pass
+
+
+@rpc("authority", "call_remote", "reliable")
+func send_answer_player_event(_peer_id_rpc, _event_rpc):
+	print("PLAYER ANSWER")
 	pass
 
 
@@ -203,6 +205,7 @@ func send_metaverse_status(metaverese_status):
 # ----- private methods
 func _on_connected_to_server():
 	print("Connection OK!")
+	await get_tree().create_timer(1).timeout
 	_peer_id = null
 	_server_connection = multiplayer.multiplayer_peer.get_peer(1)
 	for index in range (0, _latency_queue_size + 1):
@@ -270,6 +273,7 @@ func _get_latency():
 
 		_latency_queue.push_back(_latency)
 		if len(_latency_queue) == _latency_queue_size:
+			@warning_ignore("integer_division")
 			var med_pos = ((_latency_queue_size - 1) / 2) + 1
 			#print("ok")
 			var local_latency_queue = _latency_queue.duplicate()
