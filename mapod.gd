@@ -230,7 +230,8 @@ func mapod_thrust(speed: Vector3):
 func _next_thrust_envent():
 	if !thrust_event_buffer.is_empty():
 		var current_event = thrust_event_buffer.get_event()
-		mapod_thrust(current_event.input)
+		var data_input = MPEventBuilder.gain_input(current_event)
+		mapod_thrust(data_input.v.d)
 		print(current_event)
 
 

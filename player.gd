@@ -14,7 +14,7 @@ extends Node3D
 
 
 # ----- signals
-signal player_event_requested(event)
+signal player_event_requested(player_object, event)
 
 # ----- enums
 enum PLAYER_EVENT_ACTION {
@@ -29,11 +29,6 @@ enum PLAYER_EVENT_ACTION {
 # ----- public variables
 
 # ----- private variables
-#var _player_event = {
-	#'T': 0.0,
-	#'action': PLAYER_EVENT_ACTION.FW_THRUST,
-	#'data': '',
-#}
 
 # movement values
 var _mp_mv_left = 0
@@ -202,6 +197,12 @@ func set_mapod_position(_position):
 			_mapod, "position", _position["position"], 0.08)
 	# OK _mapod.position = _position["position"]
 
+
+func push_thrust_event(mp_event):
+	_mapod.thrust_event_buffer.push(mp_event, 0)
+	pass
+
+
 # ----- private methods
 
 func _mapod_elab_input():
@@ -227,8 +228,10 @@ func _mapod_thrust(move_vec):
 			"ME": "thrust",
 			"input": move_vec
 		}
-		_player_event_request(event)
-		_mapod.thrust_event_buffer.push(event, 0)
+		var mp_event = MPEventBuilder.get_drone_trust(move_vec)
+		# servirebbe il server time qui
+		_player_event_request(self, mp_event)
+		#_mapod.thrust_event_buffer.push(mp_event, 0)
 
 
 func _mapod_rotate(rotate_vec):
@@ -238,17 +241,18 @@ func _mapod_rotate(rotate_vec):
 			"ME": "rotate",
 			"input": rotate_vec
 		}
-		_player_event_request(event)
-		_mapod.rotate_event_buffer.push(event, 0)
+		var mp_event = MPEventBuilder.get_drone_rotate(rotate_vec)
+		_player_event_request(self, mp_event)
+		_mapod.rotate_event_buffer.push(mp_event, 0)
 
 
-func _player_event_request(event):
-	player_event_requested.emit(event)
+func _player_event_request(player_object, mp_event):
+	player_event_requested.emit(player_object, mp_event)
 	# from server simulation (debug only)
-	var me = event["ME"]
-	if me == "thrust":
-		pass
-	elif me == "rotate":
-		pass
+	#var me = event["ME"]
+	#if me == "thrust":
+		#pass
+	#elif me == "rotate":
+		#pass
 
 

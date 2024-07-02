@@ -14,7 +14,7 @@ func _init(max_size: int):
 
 func push(mapod4d_event, minimum_tick):
 	var len_internal_buffer = len(_internal_buffer)
-	if mapod4d_event.T > minimum_tick:
+	if minimum_tick == 0 or mapod4d_event.T > minimum_tick:
 		if len_internal_buffer == 0:
 			_internal_buffer.push_back(mapod4d_event)
 		else:

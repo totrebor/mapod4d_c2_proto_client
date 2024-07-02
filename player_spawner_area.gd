@@ -23,6 +23,7 @@ extends Marker3D
 @export var players_scene = preload("res://player.tscn")
 
 # ----- public variables
+var local_player = null
 
 # ----- private variables
 
@@ -56,9 +57,13 @@ func remote_spawn():
 	await(get_tree().create_timer(0.1).timeout)
 
 func local_spawn():
-	var player = players_scene.instantiate()
-	player.name = "MapodAvatar"
-	add_child(player)
+	local_player = players_scene.instantiate()
+	local_player.name = "MapodAvatar"
+	add_child(local_player)
+
+
+func get_local_player():
+	return local_player
 
 # ----- private methods
 

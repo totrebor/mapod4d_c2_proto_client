@@ -30,7 +30,6 @@ const LATENCY_QUEUE_SIZE = 11
 # ----- public variables
 var multiplayer_peer = ENetMultiplayerPeer.new()
 
-
 var player_scene = preload("res://player.tscn")
 var _player_node = ""
 
@@ -99,7 +98,9 @@ func _physics_process(_delta):
 func _unhandled_input(event):
 	if event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+	if event is InputEventMouseButton \
+			and event.button_index == MOUSE_BUTTON_LEFT \
+			and event.pressed:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	#if event.is_action_pressed("mapod_a"):
 		#send_event.rpc_id(1, {
@@ -198,6 +199,12 @@ func send_metaverse_status(metaverese_status):
 
 
 # ----- private methods
+
+func get_player_node_or_null(peer_id):
+	var player_node_name = "PlayerSpawnerArea/" + str(peer_id)
+	var player_node = get_node_or_null(_player_node)
+	return player_node
+
 func _on_connected_to_server():
 	print("Connection OK!")
 	await get_tree().create_timer(1).timeout
@@ -215,13 +222,17 @@ func connection_failed():
 	_peer_id = null
 	_server_connection = null
 	$PlayerSpawnerArea.local_spawn()
+	await get_tree().create_timer(1).timeout
+	var player_node = $PlayerSpawnerArea.get_local_player()
+	player_node.player_event_requested.connect(_on_player_event_requested)
 
 
 func _on_connection_failed():
-	print("Connection ERROR!")
-	_peer_id = null
-	_server_connection = null
-	$PlayerSpawnerArea.local_spawn()
+	print("OnConnection ERROR!")
+	connection_failed()
+	#_peer_id = null
+	#_server_connection = null
+	#$PlayerSpawnerArea.local_spawn()
 
 #https://daposto.medium.com/game-networking-2-time-tick-clock-synchronisation-9a0e76101fe5
 #Method 1
@@ -322,13 +333,26 @@ func serverTime():
 	return server_ticks_delta + Time.get_ticks_msec()
 
 
-func _on_player_event_requested(event):
+func _on_player_event_requested(player_object, mp_event):
 	print("PLAYER EVENT")
+	var player = player_object
 	if _peer_id != null:
-		print("PLAYER EVENT START")
-		event.peer_id = _peer_id
-		event.type = MPEVENT_TYPE.DRONE
-		event.T = serverTime()
-		event.L = _latency
-		print(server_ticks_delta)
-		send_player_event.rpc_id(1, _peer_id, event)
+		print("NET PLAYER EVENT START")
+		# var player = get_player_node_or_null(_peer_id)
+		if player != null:
+			#event.peer_id = _peer_id
+			#event.class = "ME"
+			#event.type = MPEVENT_TYPE.DRONE
+			#event.T = serverTime()
+			#event.L = _latency
+			## info setting
+			MPEventBuilder.set_peer_id(_peer_id, mp_event)
+			MPEventBuilder.set_tick_latency(serverTime(), _latency, mp_event)
+			print(server_ticks_delta)
+			## send to server player
+			send_player_event.rpc_id(1, _peer_id, mp_event)
+			## send to local player
+			player.push_thrust_event(mp_event)
+	else:
+		print("LOCAL PLAYER EVENT START")
+		player.push_thrust_event(mp_event)
