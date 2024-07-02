@@ -3,7 +3,7 @@
 # class_name
 
 # extends
-extends Marker3D
+extends Node
 
 ## A brief description of your script.
 ##
@@ -20,10 +20,8 @@ extends Marker3D
 # ----- constants
 
 # ----- exported variables
-@export var players_scene = preload("res://player.tscn")
 
 # ----- public variables
-var local_player = null
 
 # ----- private variables
 
@@ -36,15 +34,7 @@ var local_player = null
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	#await(get_tree().create_timer(0.1).timeout)
-	#for i in range(0, multiplayer.get_peers().size()):
-		#var player = players_scene.instantiate()
-		#var player_id = multiplayer.get_peers()[i]
-		#player.name = str(player_id)
-		#add_child(player)
-		#await(get_tree().create_timer(0.1).timeout)
-		#player.rpc("setup_multiplayer", player_id)
-	pass
+	pass # Replace with function body.
 
 # ----- remaining built-in virtual methods
 
@@ -53,17 +43,6 @@ func _process(_delta):
 	pass # Replace with function body.
 
 # ----- public methods
-func remote_spawn():
-	await(get_tree().create_timer(0.1).timeout)
-
-func local_spawn():
-	local_player = players_scene.instantiate()
-	local_player.name = "MapodAvatar"
-	add_child(local_player)
-
-
-func get_local_player():
-	return local_player
 
 # ----- private methods
 
