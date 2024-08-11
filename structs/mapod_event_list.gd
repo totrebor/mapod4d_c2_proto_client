@@ -13,16 +13,19 @@ func _init(max_size: int):
 func push_unc(mapod4d_event):
 	var len_internal_buffer = len(_internal_buffer)
 	if _max_size == 0 or len_internal_buffer < _max_size:
-		for index in range(0, len_internal_buffer):
-			var local_index = len_internal_buffer - index - 1
-			if mapod4d_event.T > _internal_buffer[local_index].T:
-				if local_index == len_internal_buffer - 1:
-					_internal_buffer.push_back(mapod4d_event)
-				elif local_index == 0:
-					_internal_buffer.push_front(mapod4d_event)
-				else:
-					_internal_buffer.insert(local_index + 1, mapod4d_event)
-				break
+		if len_internal_buffer == 0:
+			_internal_buffer.push_back(mapod4d_event)
+		else:
+			for index in range(0, len_internal_buffer):
+				var local_index = len_internal_buffer - index - 1
+				if mapod4d_event.T > _internal_buffer[local_index].T:
+					if local_index == len_internal_buffer - 1:
+						_internal_buffer.push_back(mapod4d_event)
+					elif local_index == 0:
+						_internal_buffer.push_front(mapod4d_event)
+					else:
+						_internal_buffer.insert(local_index + 1, mapod4d_event)
+					break
 	else:
 		## out of buffer
 		pass

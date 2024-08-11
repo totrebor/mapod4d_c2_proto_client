@@ -199,11 +199,12 @@ func set_mapod_position(_position):
 
 
 func push_thrust_event(mp_event):
-	_mapod.thrust_event_buffer.push(mp_event, 0)
+	_mapod.thrust_event_buffer.push_c(mp_event, 0)
 	pass
 
 
 func push_confirm_thrust_event(mp_event):
+	print("push_confirm_thrust_event ", mp_event)
 	_mapod.confirmed_thrust_event_buffer.push_unc(mp_event)
 
 

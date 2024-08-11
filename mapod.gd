@@ -50,6 +50,8 @@ var _rotate_x_lerp_weight = 1.1
 var rotate_x_inc = 0
 var _rotate_enabled = true
 
+var _collimation_level = 0
+
 # ----- onready variables
 @onready var _camera = $Camera3D
 
@@ -61,11 +63,11 @@ var _rotate_enabled = true
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	thrust_event_buffer = MapodEventBuffer.new(1000)
+	thrust_event_buffer = MapodEventList.new(1000)
 	confirmed_thrust_event_buffer = MapodEventList.new(1000)
-	rotate_event_buffer = MapodEventBuffer.new(1000)
-	srv_thrust_event_buffer = MapodEventBuffer.new(1000)
-	srv_rotate_event_buffer = MapodEventBuffer.new(1000)
+	rotate_event_buffer = MapodEventList.new(1000)
+	srv_thrust_event_buffer = MapodEventList.new(1000)
+	srv_rotate_event_buffer = MapodEventList.new(1000)
 	current_thrust_event = null
 
 # ----- remaining built-in virtual methods
@@ -96,13 +98,15 @@ func _physics_process(_delta):
 	else:
 		## end of event
 		if current_thrust_event != null:
-			var ce = confirmed_thrust_event_buffer.get_event_cb(
-					current_thrust_event.T)
+			var cet = MPEventBuilder.gain_tick(current_thrust_event)
+			var ce = confirmed_thrust_event_buffer.get_event_cb(cet)
 			if ce != null:
-				print("end of event ", current_thrust_event)
-				print("end of event position ", position)
-		# get confirm for position
-		# compare position
+				if !_compare_end_event_mapod_position(ce):
+					print("end of event not confirmed 0")
+					_collimation_inc()
+			else:
+				print("end of event not confirmed 1")
+				_collimation_inc()
 		_thrust_enabled = true
 		call_deferred("_next_thrust_envent")
 	
@@ -240,9 +244,37 @@ func mapod_thrust(speed: Vector3):
 
 # ----- private methods
 
+func _compare_end_event_mapod_position(mp_event):
+	var ret_val = false
+	var conf_position = MPEventBuilder.gain_input(mp_event)
+	print("_compare_end_event_mapod_position conf_position ", conf_position)
+	print("_compare_end_event_mapod_position position ", position)
+	if conf_position.v.t == MPEventBuilder.MPEVENT_INPUT_DT.VECTOR3:
+		var diff = conf_position.v.d - position
+		var magnitude = diff.length()
+		if magnitude > 0.05:
+			## errore di collimazione fuori limite
+			print("errore di collimazione fuori limite")
+			_collimation_inc()
+		else:
+			print("collimazione OK")
+			_collimation_reset()
+		move_and_collide(diff)
+		ret_val = true
+	return ret_val
+
+
+func _collimation_reset():
+	_collimation_level = 0
+
+
+func _collimation_inc():
+	_collimation_level += 1
+
+
 func _next_thrust_envent():
 	if !thrust_event_buffer.is_empty():
-		current_thrust_event = thrust_event_buffer.get_event()
+		current_thrust_event = thrust_event_buffer.get_event_rm()
 		var data_input = MPEventBuilder.gain_input(current_thrust_event)
 		mapod_thrust(data_input.v.d)
 		print("_next_thrust_envent ", current_thrust_event)
