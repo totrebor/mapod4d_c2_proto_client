@@ -21,7 +21,8 @@ enum MPEVENT_TYPE {
 	NONE = 0,
 	DRONE_THRUST = 1000,
 	DRONE_ROTATE = 1001,
-	DRONE_CONFIRM_POSITION = 1001,
+	DRONE_CONFIRM_THRUST = 1001,
+	DRONE_CONFIRM_ROTATE = 1002,
 }
 
 enum MPEVENT_INPUT_DT {
@@ -52,6 +53,17 @@ const INPUT = "I"
 # ----- remaining built-in virtual methods
 
 # ----- public methods
+static func is_valid_mp_event(mp_event):
+	var ret_val = true
+	if TICK not in mp_event:
+		ret_val = false
+	elif MPE not in mp_event:
+		ret_val = false
+	elif mp_event[MPE] not in MPEVENT_TYPE:
+		ret_val = false
+	return ret_val
+
+
 static func is_drone(mp_event):
 	var ret_val = false
 	if MPE in mp_event:
@@ -59,12 +71,14 @@ static func is_drone(mp_event):
 			ret_val = true
 		elif  mp_event[MPE] == MPEVENT_TYPE.DRONE_ROTATE:
 			ret_val = true
-		elif  mp_event[MPE] == MPEVENT_TYPE.DRONE_CONFIRM_POSITION:
+		elif  mp_event[MPE] == MPEVENT_TYPE.DRONE_CONFIRM_THRUST:
+			ret_val = true
+		elif  mp_event[MPE] == MPEVENT_TYPE.DRONE_CONFIRM_ROTATE:
 			ret_val = true
 	return ret_val
 
 
-static func is_drone_trust(mp_event):
+static func is_drone_thrust(mp_event):
 	var ret_val = false
 	if MPE in mp_event:
 		if mp_event[MPE] == MPEVENT_TYPE.DRONE_THRUST:
@@ -97,7 +111,11 @@ static func gain_input(mp_event):
 	return _input_decode(_gain_data(mp_event, INPUT))
 
 
-static func get_empty():
+static func gain_tick(mp_event):
+	return _gain_data(mp_event, TICK)
+
+
+static func build_empty():
 	var mp_event = {
 		TICK: 0,
 		LATENCY: 0,
@@ -106,7 +124,7 @@ static func get_empty():
 	return mp_event
 
 
-static func get_drone_trust(vec_input :Vector3):
+static func build_drone_thrust(vec_input :Vector3):
 	var input_data = _input_encode({
 			"v": {
 				"t": MPEVENT_INPUT_DT.VECTOR3,
@@ -122,7 +140,7 @@ static func get_drone_trust(vec_input :Vector3):
 	return mp_event
 
 
-static func get_drone_rotate(vec_input :Vector3):
+static func build_drone_rotate(vec_input :Vector3):
 	var mp_event = {
 		TICK: 0,
 		LATENCY: 0,
@@ -131,10 +149,29 @@ static func get_drone_rotate(vec_input :Vector3):
 	}
 	return mp_event
 
+
+static func build_drone_confirm_thrust(vec_input :Vector3):
+	var input_data = _input_encode({
+			"v": {
+				"t": MPEVENT_INPUT_DT.VECTOR3,
+				"d": vec_input
+			}
+		})
+	var mp_event = {
+		TICK: 0,
+		LATENCY: 0,
+		MPE: MPEVENT_TYPE.DRONE_CONFIRM_THRUST,
+		INPUT: input_data
+	}
+	return mp_event
+
+
 # ----- private methods
 
 static func _gain_data(mp_event, data_id):
 	var ret_val = ""
+	## debug
+	assert(data_id in mp_event, "MPEVENT ERROR ID %s" % str(data_id))
 	if data_id in mp_event:
 		ret_val = str(mp_event[data_id])
 	return ret_val
@@ -148,9 +185,9 @@ static func _input_encode(data: Dictionary):
 				ret_val[element_name] = {
 					"t": data[element_name].t,
 					"d" : {
-						"x": data[element_name].d.x,
-						"y": data[element_name].d.y,
-						"z": data[element_name].d.z
+						"x": snapped(data[element_name].d.x, 0.001),
+						"y": snapped(data[element_name].d.y, 0.001),
+						"z": snapped(data[element_name].d.z, 0.001)
 					}
 				}
 	return JSON.stringify(ret_val)

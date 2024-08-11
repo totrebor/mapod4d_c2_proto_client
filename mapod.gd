@@ -25,9 +25,11 @@ extends CharacterBody3D
 
 # ----- public variables
 var thrust_event_buffer
+var confirmed_thrust_event_buffer
 var rotate_event_buffer
 var srv_thrust_event_buffer
 var srv_rotate_event_buffer
+var current_thrust_event
 
 # ----- private variables
 var _speed = null
@@ -60,9 +62,11 @@ var _rotate_enabled = true
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	thrust_event_buffer = MapodEventBuffer.new(1000)
+	confirmed_thrust_event_buffer = MapodEventList.new(1000)
 	rotate_event_buffer = MapodEventBuffer.new(1000)
 	srv_thrust_event_buffer = MapodEventBuffer.new(1000)
 	srv_rotate_event_buffer = MapodEventBuffer.new(1000)
+	current_thrust_event = null
 
 # ----- remaining built-in virtual methods
 
@@ -90,6 +94,15 @@ func _physics_process(_delta):
 			#print("arrivato " + str(position))
 			pass
 	else:
+		## end of event
+		if current_thrust_event != null:
+			var ce = confirmed_thrust_event_buffer.get_event_cb(
+					current_thrust_event.T)
+			if ce != null:
+				print("end of event ", current_thrust_event)
+				print("end of event position ", position)
+		# get confirm for position
+		# compare position
 		_thrust_enabled = true
 		call_deferred("_next_thrust_envent")
 	
@@ -229,10 +242,12 @@ func mapod_thrust(speed: Vector3):
 
 func _next_thrust_envent():
 	if !thrust_event_buffer.is_empty():
-		var current_event = thrust_event_buffer.get_event()
-		var data_input = MPEventBuilder.gain_input(current_event)
+		current_thrust_event = thrust_event_buffer.get_event()
+		var data_input = MPEventBuilder.gain_input(current_thrust_event)
 		mapod_thrust(data_input.v.d)
-		print(current_event)
+		print("_next_thrust_envent ", current_thrust_event)
+	else:
+		current_thrust_event = null
 
 
 func _next_rotate_envent():

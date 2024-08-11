@@ -180,6 +180,17 @@ func send_player_event(_peer_id_rpc, _event_rpc):
 	pass
 
 
+## confirm an event to the remote player
+@rpc("authority", "call_remote", "reliable")
+func confirm_player_event(mp_event):
+	print("confirm_player_event ", mp_event)
+	var player_node = _get_player_node_or_null(_peer_id)
+	if player_node != null:
+		print("push confirm")
+		player_node.push_confirm_thrust_event(mp_event)
+	
+
+
 @rpc("authority", "call_remote", "reliable")
 func send_server_event(event):
 	print(event)
@@ -200,7 +211,7 @@ func send_metaverse_status(metaverese_status):
 
 # ----- private methods
 
-func get_player_node_or_null(peer_id):
+func _get_player_node_or_null(peer_id):
 	var player_node_name = "PlayerSpawnerArea/" + str(peer_id)
 	var player_node = get_node_or_null(_player_node)
 	return player_node

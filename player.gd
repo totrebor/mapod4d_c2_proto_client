@@ -203,6 +203,10 @@ func push_thrust_event(mp_event):
 	pass
 
 
+func push_confirm_thrust_event(mp_event):
+	_mapod.confirmed_thrust_event_buffer.push_unc(mp_event)
+
+
 # ----- private methods
 
 func _mapod_elab_input():
@@ -228,7 +232,7 @@ func _mapod_thrust(move_vec):
 			"ME": "thrust",
 			"input": move_vec
 		}
-		var mp_event = MPEventBuilder.get_drone_trust(move_vec)
+		var mp_event = MPEventBuilder.build_drone_thrust(move_vec)
 		# servirebbe il server time qui
 		_player_event_request(self, mp_event)
 		#_mapod.thrust_event_buffer.push(mp_event, 0)
@@ -241,7 +245,7 @@ func _mapod_rotate(rotate_vec):
 			"ME": "rotate",
 			"input": rotate_vec
 		}
-		var mp_event = MPEventBuilder.get_drone_rotate(rotate_vec)
+		var mp_event = MPEventBuilder.build_drone_rotate(rotate_vec)
 		_player_event_request(self, mp_event)
 		_mapod.rotate_event_buffer.push(mp_event, 0)
 
