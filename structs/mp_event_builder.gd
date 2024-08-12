@@ -28,6 +28,7 @@ enum MPEVENT_TYPE {
 enum MPEVENT_INPUT_DT {
 	NULL = 0,
 	VECTOR3 = 1,
+	VECTOR2 = 2,
 }
 
 # ----- constants
@@ -86,6 +87,14 @@ static func is_drone_thrust(mp_event):
 	return ret_val
 
 
+static func is_drone_rotate(mp_event):
+	var ret_val = false
+	if MPE in mp_event:
+		if mp_event[MPE] == MPEVENT_TYPE.DRONE_ROTATE:
+			ret_val = true
+	return ret_val
+
+
 static func set_peer_id(peer_id, mp_event):
 	mp_event[PEER_ID] = peer_id
 
@@ -140,12 +149,18 @@ static func build_drone_thrust(vec_input :Vector3):
 	return mp_event
 
 
-static func build_drone_rotate(vec_input :Vector3):
+static func build_drone_rotate(vec_input :Vector2):
+	var input_data = _input_encode({
+			"v": {
+				"t": MPEVENT_INPUT_DT.VECTOR2,
+				"d": vec_input
+			}
+		})
 	var mp_event = {
 		TICK: 0,
 		LATENCY: 0,
 		MPE: MPEVENT_TYPE.DRONE_ROTATE,
-		INPUT: JSON.stringify(vec_input)
+		INPUT: input_data
 	}
 	return mp_event
 
@@ -190,6 +205,14 @@ static func _input_encode(data: Dictionary):
 						"z": snapped(data[element_name].d.z, 0.001)
 					}
 				}
+			MPEVENT_INPUT_DT.VECTOR2:
+				ret_val[element_name] = {
+					"t": data[element_name].t,
+					"d" : {
+						"x": snapped(data[element_name].d.x, 0.001),
+						"y": snapped(data[element_name].d.y, 0.001),
+					}
+				}
 	return JSON.stringify(ret_val)
 
 
@@ -205,6 +228,14 @@ static func _input_decode(tmp_data: String):
 						float(data[element_name].d.x),
 						float(data[element_name].d.y),
 						float(data[element_name].d.z),
+					)
+				}
+			MPEVENT_INPUT_DT.VECTOR2:
+				ret_val[element_name] = {
+					"t": data[element_name].t,
+					"d": Vector2(
+						float(data[element_name].d.x),
+						float(data[element_name].d.y),
 					)
 				}
 	return ret_val

@@ -121,11 +121,6 @@ func _unhandled_input(event):
 			#float(event.is_action_pressed("mapod_s")) * -1.0
 		#)
 		
-		if event.is_action_pressed("mapod_rotate_u"):
-			_mp_rt_up = 1
-		elif event.is_action_released("mapod_rotate_u"):
-			_mp_rt_up = 0
-
 		elif event.is_action_pressed("mapod_rotate_d"):
 			_mp_rt_down = 1
 		elif event.is_action_released("mapod_rotate_d"):
@@ -203,6 +198,11 @@ func push_thrust_event(mp_event):
 	pass
 
 
+func push_rotate_event(mp_event):
+	_mapod.rotate_event_buffer.push_c(mp_event, 0)
+	pass
+
+
 func push_confirm_thrust_event(mp_event):
 	print("push_confirm_thrust_event ", mp_event)
 	_mapod.confirmed_thrust_event_buffer.push_unc(mp_event)
@@ -228,11 +228,6 @@ func _mapod_elab_input():
 
 func _mapod_thrust(move_vec):
 	if _mapod.can_thrust():
-		var event = {
-			"T": Time.get_ticks_msec(),
-			"ME": "thrust",
-			"input": move_vec
-		}
 		var mp_event = MPEventBuilder.build_drone_thrust(move_vec)
 		# servirebbe il server time qui
 		_player_event_request(self, mp_event)
@@ -241,14 +236,10 @@ func _mapod_thrust(move_vec):
 
 func _mapod_rotate(rotate_vec):
 	if _mapod.can_rotate():
-		var event = {
-			"T": Time.get_ticks_msec(),
-			"ME": "rotate",
-			"input": rotate_vec
-		}
 		var mp_event = MPEventBuilder.build_drone_rotate(rotate_vec)
+		# servirebbe il server time qui
 		_player_event_request(self, mp_event)
-		_mapod.rotate_event_buffer.push(mp_event, 0)
+		#_mapod.rotate_event_buffer.push_unc(mp_event)
 
 
 func _player_event_request(player_object, mp_event):

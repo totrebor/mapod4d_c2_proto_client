@@ -363,7 +363,9 @@ func _on_player_event_requested(player_object, mp_event):
 			## send to server player
 			send_player_event.rpc_id(1, _peer_id, mp_event)
 			## send to local player
-			player.push_thrust_event(mp_event)
 	else:
 		print("LOCAL PLAYER EVENT START")
+	if MPEventBuilder.is_drone_thrust(mp_event):
 		player.push_thrust_event(mp_event)
+	elif MPEventBuilder.is_drone_rotate(mp_event):
+		player.push_rotate_event(mp_event)

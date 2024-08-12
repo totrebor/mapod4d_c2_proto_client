@@ -30,6 +30,7 @@ var rotate_event_buffer
 var srv_thrust_event_buffer
 var srv_rotate_event_buffer
 var current_thrust_event
+var current_rotate_event
 
 # ----- private variables
 var _speed = null
@@ -69,6 +70,7 @@ func _ready():
 	srv_thrust_event_buffer = MapodEventList.new(1000)
 	srv_rotate_event_buffer = MapodEventList.new(1000)
 	current_thrust_event = null
+	current_rotate_event = null
 
 # ----- remaining built-in virtual methods
 
@@ -284,9 +286,12 @@ func _next_thrust_envent():
 
 func _next_rotate_envent():
 	if !rotate_event_buffer.is_empty():
-		var current_event = rotate_event_buffer.get_event()
-		mapod_rotate(current_event.input)
-		print(current_event)
+		current_rotate_event = rotate_event_buffer.get_event_rm()
+		var data_input = MPEventBuilder.gain_input(current_rotate_event)
+		mapod_rotate(data_input.v.d)
+		print("_next_rotate_envent ", current_rotate_event)
+	else:
+		current_rotate_event = null
 
 
 

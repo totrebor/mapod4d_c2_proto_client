@@ -50,6 +50,9 @@ func push_c(mapod4d_event, minimum_tick):
 						else:
 							_internal_buffer.insert(local_index + 1, mapod4d_event)
 						break
+		else:
+			## discarged
+			pass
 	else:
 		## out of buffer
 		pass
