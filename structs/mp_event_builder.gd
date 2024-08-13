@@ -21,8 +21,8 @@ enum MPEVENT_TYPE {
 	NONE = 0,
 	DRONE_THRUST = 1000,
 	DRONE_ROTATE = 1001,
-	DRONE_CONFIRM_THRUST = 1001,
-	DRONE_CONFIRM_ROTATE = 1002,
+	DRONE_CONFIRM_THRUST = 1002,
+	DRONE_CONFIRM_ROTATE = 1003,
 }
 
 enum MPEVENT_INPUT_DT {
@@ -87,10 +87,26 @@ static func is_drone_thrust(mp_event):
 	return ret_val
 
 
+static func is_drone_confirm_thrust(mp_event):
+	var ret_val = false
+	if MPE in mp_event:
+		if mp_event[MPE] == MPEVENT_TYPE.DRONE_CONFIRM_THRUST:
+			ret_val = true
+	return ret_val
+
+
 static func is_drone_rotate(mp_event):
 	var ret_val = false
 	if MPE in mp_event:
 		if mp_event[MPE] == MPEVENT_TYPE.DRONE_ROTATE:
+			ret_val = true
+	return ret_val
+
+
+static func is_drone_confirm_rotate(mp_event):
+	var ret_val = false
+	if MPE in mp_event:
+		if mp_event[MPE] == MPEVENT_TYPE.DRONE_CONFIRM_ROTATE:
 			ret_val = true
 	return ret_val
 
@@ -176,6 +192,22 @@ static func build_drone_confirm_thrust(vec_input :Vector3):
 		TICK: 0,
 		LATENCY: 0,
 		MPE: MPEVENT_TYPE.DRONE_CONFIRM_THRUST,
+		INPUT: input_data
+	}
+	return mp_event
+
+
+static func build_drone_confirm_rotate(vec_input :Vector2):
+	var input_data = _input_encode({
+			"v": {
+				"t": MPEVENT_INPUT_DT.VECTOR2,
+				"d": vec_input
+			}
+		})
+	var mp_event = {
+		TICK: 0,
+		LATENCY: 0,
+		MPE: MPEVENT_TYPE.DRONE_CONFIRM_ROTATE,
 		INPUT: input_data
 	}
 	return mp_event

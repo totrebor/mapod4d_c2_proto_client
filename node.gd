@@ -111,7 +111,6 @@ func _unhandled_input(event):
 
 
 # ----- public methods
-
 ## server connected
 @rpc("authority", "call_remote", "unreliable")
 func server_name(peer_id, remote_server_name):
@@ -186,8 +185,13 @@ func confirm_player_event(mp_event):
 	print("confirm_player_event ", mp_event)
 	var player_node = _get_player_node_or_null(_peer_id)
 	if player_node != null:
-		print("push confirm")
-		player_node.push_confirm_thrust_event(mp_event)
+		print("push confirm ", mp_event)
+		if MPEventBuilder.is_drone_confirm_thrust(mp_event):
+			print("push confirm thrust")
+			player_node.push_confirm_thrust_event(mp_event)
+		elif MPEventBuilder.is_drone_rotate(mp_event):
+			print("push confirm thrust")
+			player_node.push_confirm_confirm_rotate_event(mp_event)
 	
 
 

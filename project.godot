@@ -17,7 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-Mapod4dNet="*res://mapod4d_net.gd"
+Mapod4dNetSingleton="*res://mapod4d_net.gd"
 
 [input]
 

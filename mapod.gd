@@ -27,6 +27,7 @@ extends CharacterBody3D
 var thrust_event_buffer
 var confirmed_thrust_event_buffer
 var rotate_event_buffer
+var confirmed_rotate_event_buffer
 var srv_thrust_event_buffer
 var srv_rotate_event_buffer
 var current_thrust_event
@@ -55,7 +56,7 @@ var _collimation_level = 0
 
 # ----- onready variables
 @onready var _camera = $Camera3D
-
+@onready var _flag_on_net = true
 
 
 # ----- optional built-in virtual _init method
@@ -67,6 +68,7 @@ func _ready():
 	thrust_event_buffer = MapodEventList.new(1000)
 	confirmed_thrust_event_buffer = MapodEventList.new(1000)
 	rotate_event_buffer = MapodEventList.new(1000)
+	confirmed_rotate_event_buffer = MapodEventList.new(1000)
 	srv_thrust_event_buffer = MapodEventList.new(1000)
 	srv_rotate_event_buffer = MapodEventList.new(1000)
 	current_thrust_event = null
@@ -98,17 +100,18 @@ func _physics_process(_delta):
 			#print("arrivato " + str(position))
 			pass
 	else:
-		## end of event
-		if current_thrust_event != null:
-			var cet = MPEventBuilder.gain_tick(current_thrust_event)
-			var ce = confirmed_thrust_event_buffer.get_event_cb(cet)
-			if ce != null:
-				if !_compare_end_event_mapod_position(ce):
-					print("end of event not confirmed 0")
+		## end of event only on net
+		if _flag_on_net:
+			if current_thrust_event != null:
+				var cet = MPEventBuilder.gain_tick(current_thrust_event)
+				var ce = confirmed_thrust_event_buffer.get_event_cb(cet)
+				if ce != null:
+					if !_compare_end_event_mapod_position(ce):
+						print("thrust end of event not confirmed 0")
+						_collimation_inc()
+				else:
+					print("thrust end of event not confirmed 1")
 					_collimation_inc()
-			else:
-				print("end of event not confirmed 1")
-				_collimation_inc()
 		_thrust_enabled = true
 		call_deferred("_next_thrust_envent")
 	
@@ -133,6 +136,18 @@ func _physics_process(_delta):
 			pass
 			#print("ruotato x " + str(_camera.rotation))
 	else:
+		## end of event only on net
+		if _flag_on_net:
+			if current_rotate_event != null:
+				var cet = MPEventBuilder.gain_tick(current_rotate_event)
+				var ce = confirmed_rotate_event_buffer.get_event_cb(cet)
+				if ce != null:
+					if !_compare_end_event_mapod_position(ce):
+						print("rotateend of event not confirmed 0")
+						_collimation_inc()
+				else:
+					print("rotate end of event not confirmed 1")
+					_collimation_inc()
 		_rotate_enabled = true
 		call_deferred("_next_rotate_envent")
 

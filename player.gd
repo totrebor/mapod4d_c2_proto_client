@@ -208,6 +208,11 @@ func push_confirm_thrust_event(mp_event):
 	_mapod.confirmed_thrust_event_buffer.push_unc(mp_event)
 
 
+func push_confirm_rotate_event(mp_event):
+	print("push_confirm_rotate_event ", mp_event)
+	_mapod.confirmed_rotate_event_buffer.push_unc(mp_event)
+
+
 # ----- private methods
 
 func _mapod_elab_input():
