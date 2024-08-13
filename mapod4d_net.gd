@@ -19,6 +19,8 @@ extends Node
 # ----- enums
 
 # ----- constants
+const ADDRESS = "localhost"
+const PORT = 9999
 const LATENCY_QUEUE_SIZE = 11
 
 # ----- exported variables
@@ -26,13 +28,14 @@ const LATENCY_QUEUE_SIZE = 11
 # ----- public variables
 
 # ----- private variables
-
+var _playerSpawnerArea = null
 
 # ----- onready variables private variables
 @onready var _peer_id = null
 @onready var _auth_token = null
 @onready var _server_connection = null
-@onready var server_ticks_delta = 0
+@onready var _server_ticks_delta = 0
+@onready var _sync_timer = null
 ## latency vars
 @onready var _latency = 0.0
 @onready var _latency_variance = 0.0
@@ -42,6 +45,9 @@ const LATENCY_QUEUE_SIZE = 11
 ## sync time like ping
 @onready var _ticks_sync_request_begin_time = 0
 @onready var _ticks_sync_request_end_time = 10
+## multiplayer connection
+@onready var multiplayer_peer = ENetMultiplayerPeer.new()
+@onready var _network_error = false
 
 # ----- optional built-in virtual _init method
 
@@ -58,6 +64,25 @@ func _process(_delta):
 	pass # Replace with function body.
 
 # ----- public methods
+func start(playerSpawnerArea):
+	_playerSpawnerArea = playerSpawnerArea
+	if _latency_queue_size <= 3:
+		_latency_queue_size = 3
+	else:
+		if _latency_queue_size % 2 == 0:
+			_latency_queue_size += 1
+	if multiplayer_peer.create_client(ADDRESS, PORT) == OK:
+		multiplayer.multiplayer_peer = multiplayer_peer
+		var peer = multiplayer_peer.get_peer(1)
+		if peer != null:
+			multiplayer_peer.get_peer(1).set_timeout(0, 0, 3000)  # 3 seconds max timeout
+		multiplayer.connected_to_server.connect(_on_connected_to_server)
+		multiplayer.connection_failed.connect(_on_connection_failed)
+	else:
+		_network_error = true
+		call_deferred("connection_failed")
+
+
 ## autenticantion client side
 @rpc("authority", "call_remote", "unreliable")
 func server_name(peer_id, remote_server_name):
@@ -116,7 +141,7 @@ func ticks_sync(client_tick, server_tick):
 	var latency = _get_latency()
 	# update server_ticks_delta  
 	server_tick += latency
-	server_ticks_delta =  server_tick - _ticks_sync_request_end_time
+	_server_ticks_delta =  server_tick - _ticks_sync_request_end_time
 	#print("after d " + str(server_ticks_delta))
 
 
@@ -161,12 +186,30 @@ func send_metaverse_status(metaverese_status):
 
 
 func serverTime():
-	return server_ticks_delta + Time.get_ticks_msec()
+	return _server_ticks_delta + Time.get_ticks_msec()
+
+
+func is_peer_connected():
+	var ret_val = false
+	var con_status = multiplayer.multiplayer_peer.get_connection_status()
+	if  con_status == MultiplayerPeer.CONNECTION_CONNECTED:
+		ret_val = true
+	return ret_val
+
+
+func connection_failed():
+	print("Connection ERROR!")
+	_peer_id = null
+	_server_connection = null
+	_playerSpawnerArea.local_spawn()
+	await get_tree().create_timer(1).timeout
+	var player_node = _playerSpawnerArea.get_local_player()
+	player_node.player_event_requested.connect(_on_player_event_requested)
 
 
 # ----- private methods
 func _get_player_node_or_null(peer_id):
-	var player_node_name = "PlayerSpawnerArea/" + str(peer_id)
+	var player_node_name = "/root/Mapod4dMain/PlayerSpawnerArea/" + str(peer_id)
 	var player_node = get_node_or_null(player_node_name)
 	return player_node
 
@@ -223,6 +266,28 @@ func _get_latency():
 	return _latency
 
 
+func _on_sync_ticks():
+	if _peer_id != null and is_peer_connected():
+		ticks_sync_request.rpc_id(1, _peer_id, Time.get_ticks_msec())
+
+
+func _on_connected_to_server():
+	print("Connection OK!")
+	await get_tree().create_timer(1).timeout
+	_server_connection = multiplayer.multiplayer_peer.get_peer(1)
+	for index in range (0, _latency_queue_size + 1):
+		_on_sync_ticks()
+	_sync_timer = Timer.new()
+	add_child(_sync_timer)
+	_sync_timer.timeout.connect(_on_sync_ticks)
+	_sync_timer.start(0.02)
+
+
+func _on_connection_failed():
+	print("OnConnection ERROR!")
+	connection_failed()
+
+
 func _on_player_event_requested(player_object, mp_event):
 	print("PLAYER EVENT")
 	var player = player_object
@@ -238,7 +303,7 @@ func _on_player_event_requested(player_object, mp_event):
 			## info setting
 			MPEventBuilder.set_peer_id(_peer_id, mp_event)
 			MPEventBuilder.set_tick_latency(serverTime(), _latency, mp_event)
-			print(server_ticks_delta)
+			print(_server_ticks_delta)
 			## send to server player
 			send_player_event.rpc_id(1, _peer_id, mp_event)
 			## send to local player
