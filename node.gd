@@ -28,7 +28,7 @@ const LATENCY_QUEUE_SIZE = 11
 # ----- exported variables
 
 # ----- public variables
-var multiplayer_peer = ENetMultiplayerPeer.new()
+#var multiplayer_peer = ENetMultiplayerPeer.new()
 
 var player_scene = preload("res://player.tscn")
 var _player_node = ""
@@ -93,6 +93,12 @@ func _physics_process(_delta):
 func _unhandled_input(event):
 	if event.is_action_pressed("ui_cancel"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if event.is_action_pressed("trash_connect"):
+		## test connect
+		Mapod4dNetSingleton.connect_server("login", "password")
+	elif event.is_action_pressed("trash_disconnect"):
+		## test disconnect
+		Mapod4dNetSingleton.disconnect_server()
 	if event is InputEventMouseButton \
 			and event.button_index == MOUSE_BUTTON_LEFT \
 			and event.pressed:

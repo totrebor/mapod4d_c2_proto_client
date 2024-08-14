@@ -31,9 +31,9 @@ const LATENCY_QUEUE_SIZE = 11
 var _playerSpawnerArea = null
 
 # ----- onready variables private variables
+@onready var _flag_started = false
 @onready var _peer_id = null
 @onready var _auth_token = null
-@onready var _server_connection = null
 @onready var _server_ticks_delta = 0
 @onready var _sync_timer = null
 ## latency vars
@@ -46,7 +46,6 @@ var _playerSpawnerArea = null
 @onready var _ticks_sync_request_begin_time = 0
 @onready var _ticks_sync_request_end_time = 10
 ## multiplayer connection
-@onready var multiplayer_peer = ENetMultiplayerPeer.new()
 @onready var _network_error = false
 
 # ----- optional built-in virtual _init method
@@ -71,16 +70,42 @@ func start(playerSpawnerArea):
 	else:
 		if _latency_queue_size % 2 == 0:
 			_latency_queue_size += 1
-	if multiplayer_peer.create_client(ADDRESS, PORT) == OK:
-		multiplayer.multiplayer_peer = multiplayer_peer
-		var peer = multiplayer_peer.get_peer(1)
-		if peer != null:
-			multiplayer_peer.get_peer(1).set_timeout(0, 0, 3000)  # 3 seconds max timeout
-		multiplayer.connected_to_server.connect(_on_connected_to_server)
-		multiplayer.connection_failed.connect(_on_connection_failed)
-	else:
-		_network_error = true
-		call_deferred("connection_failed")
+	_flag_started = true
+
+
+func connect_server(_login, _password):
+	print("connect_server")
+	if _flag_started:
+		var multiplayer_peer = ENetMultiplayerPeer.new()
+		if multiplayer_peer != null:
+			if multiplayer_peer.create_client(ADDRESS, PORT) == OK:
+				multiplayer.multiplayer_peer = multiplayer_peer
+				var peer = multiplayer_peer.get_peer(1)
+				if peer != null:
+					## 3 seconds max timeout
+					multiplayer_peer.get_peer(1).set_timeout(0, 0, 3000)
+				var isc = multiplayer.connected_to_server.is_connected(
+							_on_connected_to_server)
+				if !isc:
+					multiplayer.connected_to_server.connect(
+							_on_connected_to_server)
+				isc = multiplayer.connected_to_server.is_connected(
+							_on_connection_failed)
+				if !isc:
+					multiplayer.connection_failed.connect(
+							_on_connection_failed)
+			else:
+				_network_error = true
+				call_deferred("connection_failed")
+
+
+func disconnect_server():
+	print("disconnect_server")
+	if multiplayer.multiplayer_peer != null:
+		multiplayer.connected_to_server.disconnect(_on_connected_to_server)
+		multiplayer.connection_failed.disconnect(_on_connection_failed)
+		multiplayer.multiplayer_peer.disconnect_peer(1)
+		multiplayer.multiplayer_peer = null
 
 
 ## autenticantion client side
@@ -189,18 +214,9 @@ func serverTime():
 	return _server_ticks_delta + Time.get_ticks_msec()
 
 
-func is_peer_connected():
-	var ret_val = false
-	var con_status = multiplayer.multiplayer_peer.get_connection_status()
-	if  con_status == MultiplayerPeer.CONNECTION_CONNECTED:
-		ret_val = true
-	return ret_val
-
-
 func connection_failed():
 	print("Connection ERROR!")
 	_peer_id = null
-	_server_connection = null
 	_playerSpawnerArea.local_spawn()
 	await get_tree().create_timer(1).timeout
 	var player_node = _playerSpawnerArea.get_local_player()
@@ -208,6 +224,15 @@ func connection_failed():
 
 
 # ----- private methods
+func _is_connected():
+	var ret_val = false
+	if multiplayer.multiplayer_peer != null:
+		var con_status = multiplayer.multiplayer_peer.get_connection_status()
+		if  con_status == MultiplayerPeer.CONNECTION_CONNECTED:
+			ret_val = true
+	return ret_val
+
+
 func _get_player_node_or_null(peer_id):
 	var player_node_name = "/root/Mapod4dMain/PlayerSpawnerArea/" + str(peer_id)
 	var player_node = get_node_or_null(player_node_name)
@@ -216,71 +241,72 @@ func _get_player_node_or_null(peer_id):
 
 func _get_latency():
 	_latency = 0
-	if _server_connection != null:
-		_latency = _server_connection.get_statistic(
-					ENetPacketPeer.PEER_ROUND_TRIP_TIME) / 2
-		#print("RTT " + str(_latency))
-		_latency_variance = _server_connection.get_statistic(
-					ENetPacketPeer.PEER_ROUND_TRIP_TIME_VARIANCE)
-		_latency = (_ticks_sync_request_end_time -
-				_ticks_sync_request_begin_time) / 2
-		#print("PING TEST " + str(_latency))
-		if _latency < 0:
-			#print("NEGATIVE LATENCY -------------------")
-			_latency = 1
-
-		_latency_queue.push_back(_latency)
-		if len(_latency_queue) == _latency_queue_size:
-			@warning_ignore("integer_division")
-			var med_pos = ((_latency_queue_size - 1) / 2) + 1
-			#print("ok")
-			var local_latency_queue = _latency_queue.duplicate()
-			local_latency_queue.sort()
-			var median = local_latency_queue[med_pos]
-			#print("median " + str(median))
-			var abs_dev = local_latency_queue.map(
-					func(number): return abs(number - median))
-			abs_dev.sort()
-			var mad = abs_dev[med_pos]
-			#print("mad " + str(mad))
-			#print("local_latency_queue " + str(local_latency_queue))
-			var final = local_latency_queue.filter(
-					func(number): return number <= (median + mad))
-			#print("final " + str(final))
-			var total = final.reduce(
-					func(accum, number): return accum + number, 0.0)
-			#print("total " + str(total))
-			#print("len " + str(float(len(final))))
-			_latency = total / float(len(final))
-			#print("latency " + str(_latency))
-			_latency_queue.pop_front()
-	# decimal count
-	#print("latency_dec " + str(_latency))
-	_latency_decimal += _latency - int(_latency)
-	_latency = int(_latency)
-	if _latency_decimal >= 1:
-		_latency_decimal -= 1
-		_latency += 1
-	#print("latency " + str(_latency))
-	assert(_latency >= 0, "negative latency")
-	return _latency
+	if _is_connected():
+		var server_connection = multiplayer.multiplayer_peer.get_peer(1)
+		if server_connection != null:
+			_latency = server_connection.get_statistic(
+						ENetPacketPeer.PEER_ROUND_TRIP_TIME) / 2
+			#print("RTT " + str(_latency))
+			_latency_variance = server_connection.get_statistic(
+						ENetPacketPeer.PEER_ROUND_TRIP_TIME_VARIANCE)
+			_latency = (_ticks_sync_request_end_time -
+					_ticks_sync_request_begin_time) / 2
+			#print("PING TEST " + str(_latency))
+			if _latency < 0:
+				#print("NEGATIVE LATENCY -------------------")
+				_latency = 1
+			_latency_queue.push_back(_latency)
+			if len(_latency_queue) == _latency_queue_size:
+				@warning_ignore("integer_division")
+				var med_pos = ((_latency_queue_size - 1) / 2) + 1
+				#print("ok")
+				var local_latency_queue = _latency_queue.duplicate()
+				local_latency_queue.sort()
+				var median = local_latency_queue[med_pos]
+				#print("median " + str(median))
+				var abs_dev = local_latency_queue.map(
+						func(number): return abs(number - median))
+				abs_dev.sort()
+				var mad = abs_dev[med_pos]
+				#print("mad " + str(mad))
+				#print("local_latency_queue " + str(local_latency_queue))
+				var final = local_latency_queue.filter(
+						func(number): return number <= (median + mad))
+				#print("final " + str(final))
+				var total = final.reduce(
+						func(accum, number): return accum + number, 0.0)
+				#print("total " + str(total))
+				#print("len " + str(float(len(final))))
+				_latency = total / float(len(final))
+				#print("latency " + str(_latency))
+				_latency_queue.pop_front()
+		# decimal count
+		#print("latency_dec " + str(_latency))
+		_latency_decimal += _latency - int(_latency)
+		_latency = int(_latency)
+		if _latency_decimal >= 1:
+			_latency_decimal -= 1
+			_latency += 1
+		#print("latency " + str(_latency))
+		assert(_latency >= 0, "negative latency")
+		return _latency
 
 
 func _on_sync_ticks():
-	if _peer_id != null and is_peer_connected():
+	if _peer_id != null and _is_connected():
 		ticks_sync_request.rpc_id(1, _peer_id, Time.get_ticks_msec())
 
 
 func _on_connected_to_server():
 	print("Connection OK!")
 	await get_tree().create_timer(1).timeout
-	_server_connection = multiplayer.multiplayer_peer.get_peer(1)
-	for index in range (0, _latency_queue_size + 1):
-		_on_sync_ticks()
-	_sync_timer = Timer.new()
-	add_child(_sync_timer)
-	_sync_timer.timeout.connect(_on_sync_ticks)
-	_sync_timer.start(0.02)
+	if _is_connected():
+		for index in range (0, _latency_queue_size + 1):
+			_on_sync_ticks()
+		_sync_timer = Timer.new()
+		add_child(_sync_timer)
+		_sync_timer.timeout.connect(_on_sync_ticks)
+		_sync_timer.start(0.02)
 
 
 func _on_connection_failed():
@@ -313,7 +339,4 @@ func _on_player_event_requested(player_object, mp_event):
 		player.push_thrust_event(mp_event)
 	elif MPEventBuilder.is_drone_rotate(mp_event):
 		player.push_rotate_event(mp_event)
-
-
-
 
