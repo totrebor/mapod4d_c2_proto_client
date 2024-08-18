@@ -255,5 +255,3 @@ func _player_event_request(player_object, mp_event):
 		#pass
 	#elif me == "rotate":
 		#pass
-
-

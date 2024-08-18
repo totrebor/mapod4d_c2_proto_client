@@ -30,7 +30,7 @@ const LATENCY_QUEUE_SIZE = 11
 # ----- public variables
 #var multiplayer_peer = ENetMultiplayerPeer.new()
 
-var player_scene = preload("res://player.tscn")
+var player_scene = preload("res://mapod4d_core/mapod4d_player/player.tscn")
 var _player_node = ""
 
 var sync_timer = null

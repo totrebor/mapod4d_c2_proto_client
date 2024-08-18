@@ -62,6 +62,7 @@ func _ready():
 func _process(_delta):
 	pass # Replace with function body.
 
+
 # ----- public methods
 func start(playerSpawnerArea):
 	_playerSpawnerArea = playerSpawnerArea
@@ -339,4 +340,3 @@ func _on_player_event_requested(player_object, mp_event):
 		player.push_thrust_event(mp_event)
 	elif MPEventBuilder.is_drone_rotate(mp_event):
 		player.push_rotate_event(mp_event)
-

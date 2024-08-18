@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://dpd4juiyv3vls"]
+
+[ext_resource type="Script" path="res://mapod4d_core/mapod4d_player/player.gd" id="1_ogjyb"]
+[ext_resource type="PackedScene" uid="uid://cxivbtm7ncvpk" path="res://mapod4d_core/mapod4d_player/mapod.tscn" id="2_ocrtc"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_s5vf3"]
+
+[node name="Player" type="Node3D"]
+script = ExtResource("1_ogjyb")
+
+[node name="Mapod" parent="." instance=ExtResource("2_ocrtc")]
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_s5vf3")

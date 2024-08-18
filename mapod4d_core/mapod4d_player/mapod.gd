@@ -20,8 +20,7 @@ extends CharacterBody3D
 # ----- constants
 
 # ----- exported variables
-@export var mouse_sensitivity = 0.01
-@export var defaultSpeed = 1.0
+@export var defaultSpeed = 1.8
 
 # ----- public variables
 var thrust_event_buffer
@@ -142,7 +141,7 @@ func _physics_process(_delta):
 				var cet = MPEventBuilder.gain_tick(current_rotate_event)
 				var ce = confirmed_rotate_event_buffer.get_event_cb(cet)
 				if ce != null:
-					if !_compare_end_event_mapod_position(ce):
+					if !_compare_end_event_mapod_rotation(ce):
 						print("rotateend of event not confirmed 0")
 						_collimation_inc()
 				else:
@@ -281,6 +280,10 @@ func _compare_end_event_mapod_position(mp_event):
 	return ret_val
 
 
+func _compare_end_event_mapod_rotation(mp_event) -> bool:
+	return true
+
+
 func _collimation_reset():
 	_collimation_level = 0
 
@@ -307,6 +310,3 @@ func _next_rotate_envent():
 		print("_next_rotate_envent ", current_rotate_event)
 	else:
 		current_rotate_event = null
-
-
-

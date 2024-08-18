@@ -20,7 +20,7 @@ extends Marker3D
 # ----- constants
 
 # ----- exported variables
-@export var players_scene = preload("res://player.tscn")
+@export var players_scene = preload("res://mapod4d_core/mapod4d_player/player.tscn")
 
 # ----- public variables
 var local_player = null
@@ -66,8 +66,3 @@ func get_local_player():
 	return local_player
 
 # ----- private methods
-
-
-
-
-

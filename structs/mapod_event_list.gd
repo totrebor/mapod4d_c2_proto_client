@@ -92,4 +92,3 @@ func print():
 	var b_size = len(_internal_buffer)
 	for index in range(0 , b_size):
 		print(_internal_buffer[index])
-
